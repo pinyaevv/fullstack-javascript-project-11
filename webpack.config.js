@@ -1,7 +1,14 @@
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import path from 'path';
 
 export default {
   mode: process.env.NODE_ENV || 'development',
+  entry: './src/index.js',
+  output: {
+    filename: 'main.js',
+    path: path.resolve(process.cwd(), 'dist'),
+    clean: true,
+  },
   module: {
     rules: [
       {
@@ -34,7 +41,12 @@ export default {
       template: 'index.html',
     }),
   ],
-  output: {
-    clean: true,
+  devServer: {
+    static: {
+      directory: path.join(process.cwd(), 'dist'),
+    },
+    compress: true,
+    port: 8080,
+    open: true,
   },
 };

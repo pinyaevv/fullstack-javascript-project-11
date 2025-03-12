@@ -1,1 +1,14 @@
 @import "~bootstrap/scss/bootstrap";
+
+body {
+    padding: 20px;
+}
+
+.rss-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-floating {
+    margin-bottom: 1rem;
+}
