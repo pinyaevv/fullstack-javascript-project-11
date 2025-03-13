@@ -35,6 +35,8 @@ class View {
           console.error('Элемент feedback не найден');
           return;
         }
+
+        this.input.value = this.state.form.url;
       
         if (!this.state.form.valid) {
           this.input.classList.add('is-invalid');
@@ -45,7 +47,6 @@ class View {
           this.feedback.textContent = '';
           this.feedback.classList.remove('text-danger');
         }
-        this.input.value = this.state.form.url;
       }
 };
 

@@ -9,19 +9,19 @@
     <main class="flex-grow-1">
         <section class="container-fluid">
             <div class="mx-auto">
-                <h1>RSS агрегатор</h1>
-                <p>Добавьте RSS и читайте любимые новости в одном месте</p>
+                <h1 id="title"></h1>
+                <p id="description"></p>
                 <form action="#" class="rss-form text-body">
                     <div class="row">
                         <div class="col">
                             <div class="form-floating">
                                 <input id="url-input" type="text" name="url" placeholder="Ссылка RSS" autocomplete="off" class="form-control">
-                                <label for="url-input">Ссылка RSS</label>
+                                <label id="input-label" for="url-input"></label>
                                 <div class="feedback invalid-feedback"></div>
                             </div>
                         </div>
                         <div class="col-auto">
-                            <button type="submit" aria-label="add" class="h-100 btn btn-lg btn-primary px-sm-5">Добавить</button>
+                            <button id="submit-button" type="submit" aria-label="add" class="h-100 btn btn-lg btn-primary px-sm-5"></button>
                         </div>
                     </div>
                 </form>
