@@ -3,10 +3,13 @@ import  'bootstrap';
 import schema from './validation.js';
 import View from './view.js';
 import i18next from './i18next.js';
+import { fetchRSS, parserRSS } from './rss.js';
 
 const form = document.querySelector('.rss-form');
 const input = document.getElementById('url-input');
 const feedback = document.querySelector('.feedback');
+const feedsContainer = document.getElementById('feeds');
+const postsContainer = document.getElementById('posts');
 const title = document.getElementById('title');
 const description = document.getElementById('description');
 const inputLabel = document.getElementById('input-label');
@@ -17,9 +20,7 @@ description.textContent = i18next.t('rssForm.description');
 inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
 submitButton.textContent = i18next.t('rssForm.submitButton');
 
-const view = new View(form, input, feedback);
-
-const addedFeeds = [];
+const view = new View(form, input, feedback, feedsContainer, postsContainer);
 
 form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -39,22 +40,20 @@ form.addEventListener('submit', (event) => {
       return;
     }
   
-    Promise.resolve()
-      .then(() => schema.validate({ url: trimmedUrl }, { abortEarly: false }))
-      .then(() => {
-        if (addedFeeds.includes(trimmedUrl)) {
-            throw new yup.ValidationError(i18next.t('errors.url'), null, 'url');
-          }
-        addedFeeds.push(trimmedUrl);
+    schema.validate({ url: trimmedUrl }, { abortEarly: false })
+      .then(() => fetchRSS(trimmedUrl))
+      .then((data) => parserRSS(data))
+      .then(( feed, post ) => {
+        view.addFeed(feed);
+        view.addPost(post);
         view.clearForm();
-        console.log(i18next.t('errors.notOneOf'), trimmedUrl);
       })
       .catch((error) => {
-        if (error.name === 'ValidationError') {
+        if(error.name = 'ValidationError') {
           view.setError(error.errors[0]);
         } else {
-          view.setError(i18next.t('errors.unknown'));
+          view.setError(i18next.t('error.network'));
           console.error(error);
         }
-    });
+      });
 });
