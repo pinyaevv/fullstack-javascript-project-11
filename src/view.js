@@ -71,14 +71,16 @@ class View {
           `)
           .join('');
 
-        this.postsContainer.innerHTML = this.state.posts
-          .map((post) => `
-            <div class="card mb-3">
-              <div class="card-body">
-                <a href="${post.link}" target="_blank" class="card-link">${post.title}</a>
+          this.postsContainer.innerHTML = this.state.posts
+          .map((post) => {
+            return `
+              <div class="card mb-3">
+                <div class="card-body">
+                  <a href="${post.link}" target="_blank" class="card-link">${post.title}</a>
+                </div>
               </div>
-            </div>
-          `)
+            `;
+          })
           .join('');
       }
 };

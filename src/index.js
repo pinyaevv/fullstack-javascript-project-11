@@ -43,16 +43,18 @@ form.addEventListener('submit', (event) => {
     schema.validate({ url: trimmedUrl }, { abortEarly: false })
       .then(() => fetchRSS(trimmedUrl))
       .then((data) => parserRSS(data))
-      .then(( feed, post ) => {
+      .then(({ feed, posts }) => {
+        console.log('Feed:', feed);
+        console.log('Posts:', posts);
         view.addFeed(feed);
-        view.addPost(post);
+        posts.forEach(post => view.addPost(post));
         view.clearForm();
       })
       .catch((error) => {
-        if(error.name = 'ValidationError') {
+        if(error.name === 'ValidationError') {
           view.setError(error.errors[0]);
         } else {
-          view.setError(i18next.t('error.network'));
+          view.setError(i18next.t('errors.network'));
           console.error(error);
         }
       });

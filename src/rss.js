@@ -10,19 +10,24 @@ export const parserRSS = (data) => {
     return new Promise((resolve, reject) => {
         try {
             const parser = new DOMParser();
-            const document = parser.parseFromString(data, 'application/xml');
+            const doc = parser.parseFromString(data, 'application/xml');
 
-            const feeds = {
-                title: document.querySelector('channel > title').textContent,
-                description: document.querySelector('channel > description').textContent,
+            const errorNode = doc.querySelector('parsererror');
+            if (errorNode) {
+                throw new Error('Ошибка парсинга RSS');
             }
 
-            const posts = Array.from(document.querySelector('item')).map((item) => ({
-                title: item.querySelector('title').textContent,
-                lint: item.querySelector('link').textContent,
+            const feed = {
+                title: doc.querySelector('channel > title')?.textContent || 'Нет заголовка',
+                description: doc.querySelector('channel > description')?.textContent || 'Нет описания',
+            };
+
+            const posts = Array.from(doc.querySelectorAll('item')).map((item) => ({
+                title: item.querySelector('title')?.textContent || 'Нет заголовка',
+                link: item.querySelector('link')?.textContent || '#',
             }));
 
-            resolve({ feeds, posts });
+            resolve({ feed, posts });
         } catch (error) {
             reject(new Error('Ошибка парсинга RSS'));
         }
