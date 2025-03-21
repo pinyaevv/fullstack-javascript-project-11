@@ -1,12 +1,13 @@
 import onChange from 'on-change';
 
 class View {
-    constructor(form, input, feedback, feedsContainer, postsContainer) {
+    constructor(form, input, feedback, feedsContainer, postsContainer, state) {
         this.form = form;
         this.input = input;
         this.feedback = feedback;
         this.feedsContainer = feedsContainer;
         this.postsContainer = postsContainer;
+        this.state = state;
 
         this.state = onChange(
             {
@@ -17,6 +18,7 @@ class View {
                 },
                 feeds: [],
                 posts: [],
+                ...state,
             },
             this.render.bind(this)
         );
@@ -26,8 +28,9 @@ class View {
       this.state.feeds.push(feed);
     }
 
-    addPost(post) {
-       this.state.posts.push(post);
+    addPost(newPost) {
+      const postToAdd = Array.isArray(newPost) ? newPost : [newPost];
+       this.state.posts = [...this.state.posts, ...postToAdd];
     }
     
     clearForm() {
