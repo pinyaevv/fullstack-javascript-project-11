@@ -4,7 +4,8 @@ import schema from './validation.js';
 import View from './view.js';
 import i18next from './i18next.js';
 import { fetchRSS, parserRSS } from './rss.js';
-import { t } from 'i18next';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 const form = document.querySelector('.rss-form');
 const input = document.getElementById('url-input');
@@ -29,6 +30,7 @@ const state = {
   },
   feeds: [],
   posts: [],
+  readPosts: new Set(),
 };
 
 const view = new View(form, input, feedback, feedsContainer, postsContainer, state);
@@ -46,7 +48,7 @@ const checkForRss = (state, view) => {
       .then((data) => parserRSS(data))
       .then(({ posts: newPosts }) => {
         const uniquePosts = newPosts.filter(
-          (newPost) => !posts.some((post) => post.link === newPost.link)
+          (newPost) => !posts.find((post) => post.link === newPost.link)
         );
 
         if (uniquePosts.length > 0) {

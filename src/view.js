@@ -8,6 +8,9 @@ class View {
         this.feedsContainer = feedsContainer;
         this.postsContainer = postsContainer;
         this.state = state;
+        this.modal = new bootstrap.Modal(document.getElementById('postModal'));
+        this.modalTitle = document.getElementById('modalTitle');
+        this.modalBody = document.getElementById('modalBody');
 
         this.state = onChange(
             {
@@ -45,6 +48,11 @@ class View {
       this.state.form.error = error;
     }
 
+    markAsRead(postId) {
+      this.state.readPosts.add(postId);
+      this.render();
+    }
+
     render() {
         if (!this.feedback) {
           console.error('Элемент feedback не найден');
@@ -76,15 +84,36 @@ class View {
 
           this.postsContainer.innerHTML = this.state.posts
           .map((post) => {
+            const isRead = this.state.readPosts.has(post.link);
             return `
               <div class="card mb-3">
                 <div class="card-body">
-                  <a href="${post.link}" target="_blank" class="card-link">${post.title}</a>
+                  <a href="${post.link}" target="_blank" class="card-link ${isRead ? 'fw-normal' : 'fw-bold'}">${post.title}</a>
+                  <button type="button" class="btn btn-primary preview-btn" data-bs-target="#postModal"
+                      data-post-link="${post.link}"
+                      data-post-title="${post.title}"
+                      data-post-description="${post.description}">
+                    Просмотр
+                  </button>
                 </div>
               </div>
             `;
           })
           .join('');
+
+          document.querySelectorAll('.preview-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const link = e.target.dataset.postLink;
+              const title = e.target.dataset.postTitle;
+              const description = e.target.dataset.postDescription;
+
+              this.modalTitle.textContent = title;
+              this.modalBody.innerHTML = description;
+              this.modal.show();
+
+              this.markAsRead(link);
+            });
+          });
       }
 };
 

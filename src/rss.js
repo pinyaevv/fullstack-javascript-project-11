@@ -45,6 +45,7 @@ export const parserRSS = (data) => {
         const posts = Array.from(doc.querySelectorAll('item')).map((item) => ({
           title: item.querySelector('title')?.textContent || 'Нет заголовка',
           link: item.querySelector('link')?.textContent || '#',
+          description: item.querySelector('description')?.textContent || 'Нет описания',
         }));
   
         console.log('Результат парсинга:', { feed, posts });
