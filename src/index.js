@@ -1,11 +1,10 @@
-import  './styles.scss';
-import  'bootstrap';
+import './styles.scss';
 import schema from './validation.js';
 import View from './view.js';
 import i18next from './i18next.js';
 import { fetchRSS, parserRSS } from './rss.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 const form = document.querySelector('.rss-form');
 const input = document.getElementById('url-input');

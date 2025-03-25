@@ -1,3 +1,4 @@
+import bootstrap from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import onChange from 'on-change';
 
 class View {
@@ -8,7 +9,9 @@ class View {
         this.feedsContainer = feedsContainer;
         this.postsContainer = postsContainer;
         this.state = state;
-        this.modal = new bootstrap.Modal(document.getElementById('postModal'));
+
+        const modalElement = document.getElementById('postModal');
+        this.modal = modalElement ? new bootstrap.Modal(modalElement) : null;
         this.modalTitle = document.getElementById('modalTitle');
         this.modalBody = document.getElementById('modalBody');
 
@@ -53,6 +56,25 @@ class View {
       this.render();
     }
 
+    escapeHtml(unsafe) {
+      if (typeof unsafe !== 'string') return '';
+      return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    cleanHtmlDescription(html) {
+      if (!html) return '';
+  
+      const div = document.createElement('div');
+      div.innerHTML = html;
+
+      return div.textContent || '';
+    }
+
     render() {
         if (!this.feedback) {
           console.error('Элемент feedback не найден');
@@ -88,11 +110,13 @@ class View {
             return `
               <div class="card mb-3">
                 <div class="card-body">
-                  <a href="${post.link}" target="_blank" class="card-link ${isRead ? 'fw-normal' : 'fw-bold'}">${post.title}</a>
-                  <button type="button" class="btn btn-primary preview-btn" data-bs-target="#postModal"
-                      data-post-link="${post.link}"
-                      data-post-title="${post.title}"
-                      data-post-description="${post.description}">
+                  <a href="${this.escapeHtml(post.link)}" 
+                     target="_blank" 
+                     class="card-link ${isRead ? 'fw-normal' : 'fw-bold'}">
+                    ${this.escapeHtml(post.title)}
+                  </a>
+                  <button class="btn btn-sm btn-primary preview-btn"
+                          data-post-link="${this.escapeHtml(post.link)}">
                     Просмотр
                   </button>
                 </div>
@@ -101,19 +125,24 @@ class View {
           })
           .join('');
 
-          document.querySelectorAll('.preview-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-              const link = e.target.dataset.postLink;
-              const title = e.target.dataset.postTitle;
-              const description = e.target.dataset.postDescription;
-
-              this.modalTitle.textContent = title;
-              this.modalBody.innerHTML = description;
-              this.modal.show();
-
-              this.markAsRead(link);
-            });
-          });
+        this.setupPreviewHandlers();
+      }
+      
+      setupPreviewHandlers() {
+        this.postsContainer.addEventListener('click', (e) => {
+          const btn = e.target.closest('.preview-btn');
+          if (!btn || !this.modal) return;
+      
+          const postLink = btn.dataset.postLink;
+          const post = this.state.posts.find(p => p.link === postLink);
+          
+          if (post) {
+            this.modalTitle.textContent = post.title;
+            this.modalBody.innerHTML = this.cleanHtmlDescription(post.description);
+            this.modal.show();
+            this.markAsRead(postLink);
+          }
+        });
       }
 };
 

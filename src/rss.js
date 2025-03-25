@@ -27,27 +27,30 @@ export const parserRSS = (data) => {
         if (!data) {
           throw new Error('Данные для парсинга отсутствуют');
         }
-  
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(data, 'application/xml');
-  
+
         const errorNode = doc.querySelector('parsererror');
         if (errorNode) {
           console.error('Ошибка парсинга XML:', errorNode.textContent);
           throw new Error('Ошибка парсинга RSS');
         }
-  
+
         const feed = {
           title: doc.querySelector('channel > title')?.textContent || 'Нет заголовка',
           description: doc.querySelector('channel > description')?.textContent || 'Нет описания',
         };
-  
-        const posts = Array.from(doc.querySelectorAll('item')).map((item) => ({
-          title: item.querySelector('title')?.textContent || 'Нет заголовка',
-          link: item.querySelector('link')?.textContent || '#',
-          description: item.querySelector('description')?.textContent || 'Нет описания',
-        }));
-  
+
+        const posts = Array.from(doc.querySelectorAll('item')).map((item) => {
+          const description = item.querySelector('description')?.textContent || '';
+          return {
+            title: item.querySelector('title')?.textContent?.trim(),
+            link: item.querySelector('link')?.textContent?.trim(),
+            description: description.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim()
+        };
+      });
+
         console.log('Результат парсинга:', { feed, posts });
         resolve({ feed, posts });
       } catch (error) {
