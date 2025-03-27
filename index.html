@@ -9,44 +9,72 @@
     <main class="flex-grow-1">
         <section class="container-fluid">
             <div class="mx-auto">
-                <h1 id="title"></h1>
-                <p id="description"></p>
-                <form action="#" class="rss-form text-body">
+                <h1 id="title">RSS агрегатор</h1>
+                <p id="description">Добавьте RSS и читайте любимые новости в одном месте</p>
+                
+                <form class="rss-form text-body">
                     <div class="row">
                         <div class="col">
                             <div class="form-floating">
-                                <input id="url-input" type="text" name="url" placeholder="Ссылка RSS" autocomplete="off" class="form-control">
-                                <label id="input-label" for="url-input"></label>
+                                <input 
+                                    id="url-input" 
+                                    type="url"
+                                    name="url" 
+                                    aria-label="url"
+                                    placeholder="Ссылка RSS" 
+                                    autocomplete="off" 
+                                    class="form-control"
+                                    required
+                                >
+                                <label id="input-label" for="url-input">Ссылка RSS</label>
                                 <div class="feedback invalid-feedback"></div>
                             </div>
                         </div>
                         <div class="col-auto">
-                            <button id="submit-button" type="submit" aria-label="add" class="h-100 btn btn-lg btn-primary px-sm-5"></button>
+                            <button 
+                                id="submit-button" 
+                                type="submit" 
+                                aria-label="add"
+                                class="h-100 btn btn-lg btn-primary px-sm-5"
+                            >
+                                Добавить
+                            </button>
                         </div>
                     </div>
                 </form>
+
                 <section class="container-feeds-and-posts">
                     <div id="feeds"></div>
                     <div id="posts"></div>
                 </section>
-                <section class="container-modal">
-                    <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalModalLabel" aria-hidden="false">
-                        <div class="modal-dialog">
-                          <div class="modal-content">
+
+                <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
                             <div class="modal-header">
-                              <h5 class="modal-title" id="modalTitle">Заголовок поста</h5>
-                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <h5 class="modal-title" id="modalTitle">Заголовок поста</h5>
+                                <button 
+                                    type="button" 
+                                    class="btn-close" 
+                                    data-bs-dismiss="modal" 
+                                    aria-label="Close"
+                                ></button>
                             </div>
                             <div class="modal-body" id="modalBody">
-                              Описание поста
+                                Описание поста
                             </div>
                             <div class="modal-footer">
-                              <button type="button" class="btn btn-sm btn-primary preview-btn" data-bs-dismiss="modal">Закрыть</button>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-sm btn-primary preview-btn" 
+                                    data-bs-dismiss="modal"
+                                >
+                                    Закрыть
+                                </button>
                             </div>
-                          </div>
                         </div>
-                      </div>
-                </section>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
