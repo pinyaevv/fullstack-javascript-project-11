@@ -1,61 +1,77 @@
 import axios from 'axios';
+import i18next from 'i18next';
 
 export const fetchRSS = (url) => {
-    const proxyUrl = `https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}&disableCache=true`;
-    return axios.get(proxyUrl)
-      .then((response) => {
-        console.log('Ответ от прокси:', response); 
-        console.log('Данные от прокси:', response.data.contents);
-  
-        if (!response.data.contents) {
-          throw new Error('Данные от прокси отсутствуют');
-        }
-  
-        return response.data.contents;
-      })
-      .catch((error) => {
-        console.error('Ошибка при запросе к прокси:', error);
-        throw error;
+  console.log('Начало fetchRSS для URL:', url);
+  const proxyUrl = `https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}&disableCache=true`;
+  console.log('Сформированный proxy URL:', proxyUrl);
+
+  return axios.get(proxyUrl)
+    .then((response) => {
+      console.log('Ответ от прокси получен', {
+        status: response.status,
+        dataLength: response.data.contents?.length
       });
-  };
+  
+      if (!response.data.contents) {
+        console.error('Ошибка в fetchRSS:', {
+          url,
+          error: error.message,
+          stack: error.stack
+        });
+        throw new Error('Данные от прокси отсутствуют');
+      }
+  
+      return response.data.contents;
+    })
+    .catch((error) => {
+      console.error('Ошибка при запросе к прокси:', error);
+      throw error;
+    });
+};
 
 export const parserRSS = (data) => {
-    return new Promise((resolve, reject) => {
-      try {
-        console.log('Данные для парсинга:', data);
+  console.log('Начало парсинга, длина данных:', data?.length);
+  return new Promise((resolve, reject) => {
+    try {
+      if (!data) {
+        console.error('Нет данных для парсинга');
+        throw new Error('Данные для парсинга отсутствуют');
+      }
 
-        if (!data) {
-          throw new Error('Данные для парсинга отсутствуют');
-        }
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(data, 'application/xml');
+      console.log('XML документ создан');
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data, 'application/xml');
+      const errorNode = doc.querySelector('parsererror');
+      if (errorNode) {
+        console.error('Ошибка парсинга XML:', errorNode.textContent);
+        throw new Error(i18next.t('errors.invalidRss'));
+      }
 
-        const errorNode = doc.querySelector('parsererror');
-        if (errorNode) {
-          console.error('Ошибка парсинга XML:', errorNode.textContent);
-          throw new Error('Ошибка парсинга RSS');
-        }
+      const feed = {
+        title: doc.querySelector('channel > title')?.textContent || 'Нет заголовка',
+        description: doc.querySelector('channel > description')?.textContent || 'Нет описания',
+      };
+      console.log('Извлечённый фид:', feed);
 
-        const feed = {
-          title: doc.querySelector('channel > title')?.textContent || 'Нет заголовка',
-          description: doc.querySelector('channel > description')?.textContent || 'Нет описания',
-        };
-
-        const posts = Array.from(doc.querySelectorAll('item')).map((item) => {
-          const description = item.querySelector('description')?.textContent || '';
-          return {
-            title: item.querySelector('title')?.textContent?.trim(),
-            link: item.querySelector('link')?.textContent?.trim(),
-            description: description.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim()
+      const posts = Array.from(doc.querySelectorAll('item')).map((item) => {
+        const description = item.querySelector('description')?.textContent || '';
+        return {
+          title: item.querySelector('title')?.textContent?.trim(),
+          link: item.querySelector('link')?.textContent?.trim(),
+          description: description.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim()
         };
       });
+      console.log('Извлечено постов:', posts.length);
 
-        console.log('Результат парсинга:', { feed, posts });
-        resolve({ feed, posts });
-      } catch (error) {
-        console.error('Ошибка в parserRSS:', error);
-        reject(new Error('Ошибка парсинга RSS'));
-      }
-    });
+      resolve({ feed, posts });
+    } catch (error) {
+      console.error('Ошибка в parserRSS:', {
+        error: error.message,
+        stack: error.stack
+      });
+      reject(error);
+    }
+  });
 };

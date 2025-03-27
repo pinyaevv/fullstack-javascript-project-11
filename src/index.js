@@ -1,8 +1,9 @@
 import './styles.scss';
-import schema from './validation.js';
+import { createSchema } from './validation.js';
 import View from './view.js';
 import i18next from './i18next.js';
 import { fetchRSS, parserRSS } from './rss.js';
+import * as yup from 'yup';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
@@ -30,14 +31,81 @@ const state = {
   feeds: [],
   posts: [],
   readPosts: new Set(),
+  addedUrls: [],
 };
 
 const view = new View(form, input, feedback, feedsContainer, postsContainer, state);
 
+const schema = createSchema(view);
+
+console.log('Запуск приложения');
+
+form.addEventListener('submit', (event) => {
+  console.log('Форма отправлена. Начало обработки...');
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+  const url = formData.get('url');
+  console.log('Введенный url:', url);
+
+  if (!url) {
+    console.warn('Пустой URL');
+    view.setError(i18next.t('errors.required'));
+    return;
+  }
+
+  if (view.state.form) {
+    view.state.form.valid = true;
+    view.state.form.error = null;
+  }
+
+  const trimmedUrl = url.trim();
+
+  schema.validate({ url: trimmedUrl }, { abortEarly: false })
+    .then(() => {
+      console.log('Валидация URL прошла успешно');
+      if (view.hasUrl(trimmedUrl)) {
+        throw new yup.ValidationError(
+          i18next.t('errors.notOneOf'),
+          null,
+          'notOneOf'
+        );
+      }
+      return fetchRSS(trimmedUrl);
+    })
+    .then((data) => {
+      console.log('Данные RSS получены');
+      return parserRSS(data);
+    })
+    .then(({ feed, posts }) => {
+      console.log('Парсинг прошел успешно:', { feed, posts });
+      view.addUrl(trimmedUrl);
+      view.addFeed({ ...feed, url: trimmedUrl });
+      posts.forEach(post => view.addPost(post));
+      view.clearForm();
+      console.log('Добавлено фидов:', state.feeds.length, 'постов:', state.posts.length);
+      view.showSuccess(i18next.t('rssForm.success'));
+
+      checkForRss(state, view);
+    })
+    .catch((error) => {
+      console.error('Ошибка в цепочке обработки RSS:', error);
+      if (error.name === 'ValidationError') {
+        console.warn('Ошибка валидации:', error.errors);
+        view.setError(error.errors[0]);
+      } else {
+        view.setError(i18next.t('errors.network'));
+      }
+    });
+});
+
 const checkForRss = (state, view) => {
+  console.log('Проверка обновлений RSS...');
   const { feeds, posts } = state;
+  console.log('Текущее количество фидов и постов:', feeds.length, posts.length);
 
   const promises = feeds.map((feed) => {
+    console.log('Проверка фида:', feed.url);
     if (!feed.url) {
       console.error('URL не определен для RSS-потока:', feed);
       return Promise.resolve();
@@ -46,62 +114,24 @@ const checkForRss = (state, view) => {
     return fetchRSS(feed.url)
       .then((data) => parserRSS(data))
       .then(({ posts: newPosts }) => {
+        console.log('Найдено новых постов:', newPosts.length);
         const uniquePosts = newPosts.filter(
           (newPost) => !posts.find((post) => post.link === newPost.link)
         );
 
         if (uniquePosts.length > 0) {
+          console.log('Добавление новых постов:', uniquePosts.length);
           view.addPost(uniquePosts);
         }
       })
       .catch((error) => {
-        console.error('Ошибка при проверке обновления:', error);
+        console.error('Ошибка при проверке обновления:', feed.url, error);
       });
   });
 
   Promise.all(promises)
     .finally(() => {
+      console.log('Проверка обновлений завершена, следующая через 5 сек');
       setTimeout(() => checkForRss(state, view), 5000);
     });
 };
-
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-
-  const formData = new FormData(event.target);
-  const url = formData.get('url');
-
-  if (!url) {
-    view.setError(i18next.t('errors.required'));
-    return;
-  }
-
-  const trimmedUrl = url.trim();
-
-  if (!trimmedUrl) {
-    view.setError(i18next.t('errors.required'));
-    return;
-  }
-
-  schema.validate({ url: trimmedUrl }, { abortEarly: false })
-    .then(() => fetchRSS(trimmedUrl))
-    .then((data) => parserRSS(data))
-    .then(({ feed, posts }) => {
-      console.log('Feed:', feed);
-      console.log('Posts:', posts);
-
-      view.addFeed({ ...feed, url: trimmedUrl });
-      posts.forEach(post => view.addPost(post));
-      view.clearForm();
-
-      checkForRss(state, view);
-    })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        view.setError(error.errors[0]);
-      } else {
-        view.setError(i18next.t('errors.network'));
-        console.error(error);
-      }
-    });
-});
