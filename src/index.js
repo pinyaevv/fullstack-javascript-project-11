@@ -81,7 +81,7 @@ form.addEventListener('submit', (event) => {
       console.log('Парсинг прошел успешно:', { feed, posts });
       view.addUrl(trimmedUrl);
       view.addFeed({ ...feed, url: trimmedUrl });
-      posts.forEach(post => view.addPost(post));
+      view.addPost(posts);
       view.clearForm();
       console.log('Добавлено фидов:', state.feeds.length, 'постов:', state.posts.length);
       view.showSuccess(i18next.t('rssForm.success'));

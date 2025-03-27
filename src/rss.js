@@ -30,6 +30,16 @@ export const fetchRSS = (url) => {
     });
 };
 
+const cleanDescription = (html) => {
+  if (!html) return '';
+  
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 export const parserRSS = (data) => {
   console.log('Начало парсинга, длина данных:', data?.length);
   return new Promise((resolve, reject) => {
@@ -56,11 +66,12 @@ export const parserRSS = (data) => {
       console.log('Извлечённый фид:', feed);
 
       const posts = Array.from(doc.querySelectorAll('item')).map((item) => {
-        const description = item.querySelector('description')?.textContent || '';
+        const description = item.querySelector('description')?.textContent || 
+                          item.querySelector('content\\:encoded')?.textContent || '';
         return {
           title: item.querySelector('title')?.textContent?.trim(),
           link: item.querySelector('link')?.textContent?.trim(),
-          description: description.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim()
+          description: cleanDescription(description)
         };
       });
       console.log('Извлечено постов:', posts.length);

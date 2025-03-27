@@ -192,7 +192,7 @@ class View {
       const post = this.state.posts.find(p => p.link === postLink);
           
       if (post) {
-        this.modalTitle.textContent = post.title;
+        this.modalTitle.textContent = post.title || 'Без заголовка';
         this.modalBody.innerHTML = this.cleanHtmlDescription(post.description);
         this.modal.show();
         this.markAsRead(postLink);
