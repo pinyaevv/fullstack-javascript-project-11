@@ -24,7 +24,7 @@ i18next.init({
         },
         buttons: {
           preview: 'Просмотр',
-        }
+        },
       },
     },
   },

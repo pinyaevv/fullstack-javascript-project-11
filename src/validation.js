@@ -16,6 +16,6 @@ export const createSchema = () => {
     url: yup
       .string()
       .required()
-      .url()
+      .url(),
   });
 };

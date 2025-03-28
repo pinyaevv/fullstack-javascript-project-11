@@ -68,7 +68,7 @@ form.addEventListener('submit', (event) => {
         throw new yup.ValidationError(
           i18next.t('errors.notOneOf'),
           null,
-          'notOneOf'
+          'notOneOf',
         );
       }
       return fetchRSS(trimmedUrl);
@@ -118,7 +118,7 @@ const checkForRss = (state, view) => {
       .then(({ posts: newPosts }) => {
         console.log('Найдено новых постов:', newPosts.length);
         const uniquePosts = newPosts.filter(
-          (newPost) => !posts.find((post) => post.link === newPost.link)
+          (newPost) => !posts.find((post) => post.link === newPost.link),
         );
 
         if (uniquePosts.length > 0) {

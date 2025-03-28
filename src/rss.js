@@ -10,14 +10,14 @@ export const fetchRSS = (url) => {
     .then((response) => {
       console.log('Ответ от прокси получен', {
         status: response.status,
-        dataLength: response.data.contents?.length
+        dataLength: response.data.contents?.length,
       });
   
       if (!response.data.contents) {
         console.error('Ошибка в fetchRSS:', {
           url,
           error: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
         throw new Error('Данные от прокси отсутствуют');
       }
@@ -71,7 +71,7 @@ export const parserRSS = (data) => {
         return {
           title: item.querySelector('title')?.textContent?.trim(),
           link: item.querySelector('link')?.textContent?.trim(),
-          description: cleanDescription(description)
+          description: cleanDescription(description),
         };
       });
       console.log('Извлечено постов:', posts.length);
@@ -80,7 +80,7 @@ export const parserRSS = (data) => {
     } catch (error) {
       console.error('Ошибка в parserRSS:', {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
       reject(error);
     }
