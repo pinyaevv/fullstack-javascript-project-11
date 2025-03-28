@@ -17,7 +17,7 @@ i18next.init({
         errors: {
           required: 'Поле не может быть пустым',
           url: 'Ссылка должна быть валидным URL',
-          notOneOf: 'RSS-поток уже добавлен',
+          notOneOf: 'RSS уже существует',
           network: 'Ошибка сети',
           invalidRss: 'Ресурс не содержит валидный RSS',
           unknown: 'Неизвестная ошибка',
