@@ -3,7 +3,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import sass from 'sass';
 
-// Получаем __dirname в ES Modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default {
@@ -36,9 +35,6 @@ export default {
             loader: 'sass-loader',
             options: {
               implementation: sass,
-              sassOptions: {
-                quietDeps: true
-              }
             }
           }
         ]

@@ -24,7 +24,6 @@
     "bootstrap": "^5.3.3",
     "css-loader": "^6.11.0",
     "eslint-plugin-import": "^2.31.0",
-    "fibers": "^5.0.3",
     "file-loader": "^6.2.0",
     "globals": "^16.0.0",
     "html-webpack-plugin": "^5.6.3",
