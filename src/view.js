@@ -158,7 +158,7 @@ class View {
                 <div class="card-body d-flex justify-content-between align-items-center">
                   <a href="${this.escapeHtml(post.link)}" 
                      target="_blank" 
-                     class="card-link ${isRead ? 'fw-normal' : 'fw-bold'}">
+                     class="${isRead ? 'fw-normal' : 'fw-bold'}">
                     ${this.escapeHtml(post.title)}
                   </a>
                   <button class="btn btn-sm btn-outline-primary preview-btn"
