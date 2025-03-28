@@ -1,4 +1,4 @@
-@import "~bootstrap/scss/bootstrap";
+@use "bootstrap/scss/bootstrap";
 
 body {
     padding: 20px;
@@ -10,7 +10,7 @@ body {
 }
 
 .form-floating {
-    margin-bottom: 1rem;
+    margin-bottom: 0rem;
 }
 
 .preview-btn {
@@ -20,3 +20,30 @@ body {
 .fw-bold {
     color: #0d6efd;
 }
+
+.container-feeds-and-posts {
+    margin-top: 2rem;
+    
+    #feeds {
+      position: sticky;
+      top: 20px;
+      height: fit-content;
+      
+      .card {
+        margin-bottom: 1rem;
+        border-left: 3px solid #0d6efd;
+      }
+    }
+    
+    #posts {
+      .card {
+        margin-bottom: 1rem;
+        transition: transform 0.2s;
+        
+        &:hover {
+          transform: translateY(-2px);
+        }
+      }
+    }
+}
+  

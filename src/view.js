@@ -1,3 +1,4 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
 import bootstrap from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import onChange from 'on-change';
 
@@ -131,11 +132,6 @@ class View {
   }
 
   render() {
-    if (!this.feedback) {
-      console.error('Элемент feedback не найден');
-      return;
-    }
-
     this.input.value = this.state.form.url;
       
     if (!this.state.form.valid) {
@@ -164,13 +160,13 @@ class View {
         const isRead = this.state.readPosts.has(post.link);
         return `
               <div class="card mb-3">
-                <div class="card-body">
+                <div class="card-body d-flex justify-content-between align-items-center">
                   <a href="${this.escapeHtml(post.link)}" 
                      target="_blank" 
                      class="card-link ${isRead ? 'fw-normal' : 'fw-bold'}">
                     ${this.escapeHtml(post.title)}
                   </a>
-                  <button class="btn btn-sm btn-primary preview-btn"
+                  <button class="btn btn-sm btn-outline-primary preview-btn"
                           data-post-link="${this.escapeHtml(post.link)}">
                     Просмотр
                   </button>

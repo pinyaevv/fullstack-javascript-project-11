@@ -41,8 +41,8 @@ const schema = createSchema(view);
 console.log('Запуск приложения');
 
 form.addEventListener('submit', (event) => {
-  console.log('Форма отправлена. Начало обработки...');
   event.preventDefault();
+  console.log('Форма отправлена. Начало обработки...');
 
   const formData = new FormData(event.target);
   const url = formData.get('url');
