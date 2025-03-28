@@ -25,7 +25,7 @@ Application for sliding and displaying RSS feeds in the distance:
 - **Deployment**: Vercel
 
 ## Installation
-git clone https://github.com/pinyaevv/fullstack-javascript-project-11.git
+git clone git@github.com:pinyaevv/fullstack-javascript-project-11.git
 cd fullstack-javascript-project-11
 npm install
 

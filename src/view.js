@@ -110,24 +110,19 @@ class View {
       this.state.form = {
         valid: true,
         error: null,
-        url: ''
+        url: '',
+        successMessage: message,
       };
     }
       
     this.state.form.valid = true;
     this.state.form.error = null;
+    this.state.form.successMessage = message;
       
     if (this.feedback) {
       this.feedback.textContent = message;
-      this.feedback.classList.add('text-success');
+      this.feedback.classList.add('text-success', 'd-block');
       this.feedback.classList.remove('text-danger');
-        
-      setTimeout(() => {
-        if (this.feedback) {
-          this.feedback.textContent = '';
-          this.feedback.classList.remove('text-success');
-        }
-      }, 5000);
     }
   }
 
