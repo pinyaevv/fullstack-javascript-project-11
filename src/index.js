@@ -93,6 +93,8 @@ form.addEventListener('submit', (event) => {
       if (error.name === 'ValidationError') {
         console.warn('Ошибка валидации:', error.errors);
         view.setError(error.errors[0]);
+      } else if (error.name === 'AxiosError' || error.message.includes('network')) {
+        view.setError(i18next.t('errors.network'));
       } else {
         view.setError(i18next.t('errors.invalidRss'));
       }
@@ -126,6 +128,9 @@ const checkForRss = (state, view) => {
       })
       .catch((error) => {
         console.error('Ошибка при проверке обновления:', feed.url, error);
+        if (error.name === 'AxiosError' || error.message.includes('network')) {
+          view.setError(i18next.t('errors.network'));
+        }
       });
   });
 
