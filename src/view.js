@@ -35,9 +35,9 @@ class View {
   addPost(newPost) {
     console.log('Добавление поста(ов):', Array.isArray(newPost) ? newPost.length : 1);
     const postsToAdd = Array.isArray(newPost) ? newPost : [newPost];
-    const uniquePosts = postsToAdd.filter((post) => (
-      !this.state.posts.some(p => p.link === post.link)
-    ));
+    const uniquePosts = postsToAdd.filter(
+      (post) => !this.state.posts.some((p) => p.link === post.link),
+    );
 
     if (uniquePosts.length > 0) {
       this.state.posts = [...this.state.posts, ...uniquePosts];
