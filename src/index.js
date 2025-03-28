@@ -94,7 +94,7 @@ form.addEventListener('submit', (event) => {
         console.warn('Ошибка валидации:', error.errors);
         view.setError(error.errors[0]);
       } else {
-        view.setError(i18next.t('errors.network'));
+        view.setError(i18next.t('errors.invalidRss'));
       }
     });
 });
