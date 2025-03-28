@@ -11,11 +11,11 @@ yup.setLocale({
   },
 });
 
-export const createSchema = () => {
-  return yup.object().shape({
-    url: yup
-      .string()
-      .required()
-      .url(),
-  });
-};
+const createSchema = () => yup.object().shape({
+  url: yup
+    .string()
+    .required()
+    .url(),
+});
+
+export default createSchema;

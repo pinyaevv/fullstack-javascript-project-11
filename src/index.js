@@ -1,9 +1,9 @@
 import './styles.scss';
-import { createSchema } from './validation.js';
+import * as yup from 'yup';
+import createSchema from './validation.js';
 import View from './view.js';
 import i18next from './i18next.js';
 import { fetchRSS, parserRSS } from './rss.js';
-import * as yup from 'yup';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
@@ -39,6 +39,46 @@ const view = new View(form, input, feedback, feedsContainer, postsContainer, sta
 const schema = createSchema(view);
 
 console.log('Запуск приложения');
+
+const checkForRss = (state, view) => {
+  console.log('Проверка обновлений RSS...');
+  const { feeds, posts } = state;
+  console.log('Текущее количество фидов и постов:', feeds.length, posts.length);
+
+  const promises = feeds.map((feed) => {
+    console.log('Проверка фида:', feed.url);
+    if (!feed.url) {
+      console.error('URL не определен для RSS-потока:', feed);
+      return Promise.resolve();
+    }
+
+    return fetchRSS(feed.url)
+      .then((data) => parserRSS(data))
+      .then(({ posts: newPosts }) => {
+        console.log('Найдено новых постов:', newPosts.length);
+        const uniquePosts = newPosts.filter(
+          (newPost) => !posts.find((post) => post.link === newPost.link),
+        );
+
+        if (uniquePosts.length > 0) {
+          console.log('Добавление новых постов:', uniquePosts.length);
+          view.addPost(uniquePosts);
+        }
+      })
+      .catch((error) => {
+        console.error('Ошибка при проверке обновления:', feed.url, error);
+        if (error.name === 'AxiosError' || error.message.includes('network')) {
+          view.setError(i18next.t('errors.network'));
+        }
+      });
+  });
+
+  Promise.all(promises)
+    .finally(() => {
+      console.log('Проверка обновлений завершена, следующая через 5 сек');
+      setTimeout(() => checkForRss(state, view), 5000);
+    });
+};
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -100,43 +140,3 @@ form.addEventListener('submit', (event) => {
       }
     });
 });
-
-const checkForRss = (state, view) => {
-  console.log('Проверка обновлений RSS...');
-  const { feeds, posts } = state;
-  console.log('Текущее количество фидов и постов:', feeds.length, posts.length);
-
-  const promises = feeds.map((feed) => {
-    console.log('Проверка фида:', feed.url);
-    if (!feed.url) {
-      console.error('URL не определен для RSS-потока:', feed);
-      return Promise.resolve();
-    }
-
-    return fetchRSS(feed.url)
-      .then((data) => parserRSS(data))
-      .then(({ posts: newPosts }) => {
-        console.log('Найдено новых постов:', newPosts.length);
-        const uniquePosts = newPosts.filter(
-          (newPost) => !posts.find((post) => post.link === newPost.link),
-        );
-
-        if (uniquePosts.length > 0) {
-          console.log('Добавление новых постов:', uniquePosts.length);
-          view.addPost(uniquePosts);
-        }
-      })
-      .catch((error) => {
-        console.error('Ошибка при проверке обновления:', feed.url, error);
-        if (error.name === 'AxiosError' || error.message.includes('network')) {
-          view.setError(i18next.t('errors.network'));
-        }
-      });
-  });
-
-  Promise.all(promises)
-    .finally(() => {
-      console.log('Проверка обновлений завершена, следующая через 5 сек');
-      setTimeout(() => checkForRss(state, view), 5000);
-    });
-};

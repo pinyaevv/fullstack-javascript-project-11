@@ -12,16 +12,12 @@ export const fetchRSS = (url) => {
         status: response.status,
         dataLength: response.data.contents?.length,
       });
-  
+
       if (!response.data.contents) {
-        console.error('Ошибка в fetchRSS:', {
-          url,
-          error: error.message,
-          stack: error.stack,
-        });
+        console.error('Ошибка в fetchRSS: Данные от прокси отсутствуют');
         throw new Error('Данные от прокси отсутствуют');
       }
-  
+
       return response.data.contents;
     })
     .catch((error) => {
@@ -32,7 +28,7 @@ export const fetchRSS = (url) => {
 
 const cleanDescription = (html) => {
   if (!html) return '';
-  
+
   const div = document.createElement('div');
   div.innerHTML = html;
   return div.textContent
@@ -66,8 +62,9 @@ export const parserRSS = (data) => {
       console.log('Извлечённый фид:', feed);
 
       const posts = Array.from(doc.querySelectorAll('item')).map((item) => {
-        const description = item.querySelector('description')?.textContent || 
-                          item.querySelector('content\\:encoded')?.textContent || '';
+        const description = item.querySelector('description')?.textContent
+          || item.querySelector('content\\:encoded')?.textContent
+          || '';
         return {
           title: item.querySelector('title')?.textContent?.trim(),
           link: item.querySelector('link')?.textContent?.trim(),

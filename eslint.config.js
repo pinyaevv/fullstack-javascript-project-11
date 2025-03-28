@@ -1,21 +1,12 @@
 import globals from 'globals';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
-import pluginJs from '@eslint/js';
+import js from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: pluginJs.configs.recommended,
-});
 
 export default [
   {
     ignores: ['dist/'],
   },
+  js.configs.recommended,
   {
     languageOptions: {
       globals: {
@@ -43,6 +34,7 @@ export default [
       'no-console': 'off',
       'import/extensions': ['error', 'ignorePackages'],
       'import/no-extraneous-dependencies': 'off',
+      'quote-props': ['error', 'consistent'],
     },
   },
 ];

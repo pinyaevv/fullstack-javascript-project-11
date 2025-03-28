@@ -18,18 +18,13 @@ class View {
     this.modalBody = document.getElementById('modalBody');
     this.addedUrls = new Set(state.addedUrls || []);
 
-    this.state = onChange(
-      {
-        form: {
-          valid: true,
-          error: null,
-          url: '',
-        },
-        feeds: [],
-        posts: [],
-        addedUrls: [...this.addedUrls],
-        ...state,
-      }, this.render.bind(this));
+    this.state = onChange({
+      form: { valid: true, error: null, url: '' },
+      feeds: [],
+      posts: [],
+      addedUrls: [...this.addedUrls],
+      ...state,
+    }, this.render.bind(this));
   }
 
   addFeed(feed) {
@@ -40,10 +35,10 @@ class View {
   addPost(newPost) {
     console.log('Добавление поста(ов):', Array.isArray(newPost) ? newPost.length : 1);
     const postsToAdd = Array.isArray(newPost) ? newPost : [newPost];
-    const uniquePosts = postsToAdd.filter(post => 
-      !this.state.posts.some(p => p.link === post.link),
-    );
-      
+    const uniquePosts = postsToAdd.filter(post =>
+      (!this.state.posts.some(p => p.link === post.link)
+      ));
+
     if (uniquePosts.length > 0) {
       this.state.posts = [...this.state.posts, ...uniquePosts];
       console.log(`Добавлено ${uniquePosts.length} новых постов, всего: ${this.state.posts.length}`);
@@ -66,7 +61,7 @@ class View {
     }
     return this.addedUrls.has(url.trim().toLowerCase());
   }
-    
+
   clearForm() {
     this.state.form.url = '';
     this.state.form.valid = true;
@@ -88,6 +83,7 @@ class View {
 
   escapeHtml(unsafe) {
     if (typeof unsafe !== 'string') return '';
+    if (this.someConfig?.escapeHtml === false) return unsafe;
     return unsafe
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -95,14 +91,12 @@ class View {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
-
+  
   cleanHtmlDescription(html) {
     if (!html) return '';
-  
-    const div = document.createElement('div');
-    div.innerHTML = html;
-
-    return div.textContent || '';
+    const container = this.cleanContainer || document.createElement('div');
+    container.innerHTML = html;
+    return container.textContent || '';
   }
 
   showSuccess(message) {
@@ -114,11 +108,11 @@ class View {
         successMessage: message,
       };
     }
-      
+
     this.state.form.valid = true;
     this.state.form.error = null;
     this.state.form.successMessage = message;
-      
+ 
     if (this.feedback) {
       this.feedback.textContent = message;
       this.feedback.classList.add('text-success', 'd-block');
@@ -128,7 +122,7 @@ class View {
 
   render() {
     this.input.value = this.state.form.url;
-      
+ 
     if (!this.state.form.valid) {
       this.input.classList.add('is-invalid');
       this.feedback.textContent = this.state.form.error;
@@ -173,15 +167,15 @@ class View {
 
     this.setupPreviewHandlers();
   }
-      
+
   setupPreviewHandlers() {
     this.postsContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('.preview-btn');
       if (!btn || !this.modal) return;
-      
+
       const postLink = btn.dataset.postLink;
-      const post = this.state.posts.find(p => p.link === postLink);
-          
+      const post = this.state.posts.find((p) => p.link === postLink);
+
       if (post) {
         this.modalTitle.textContent = post.title || 'Без заголовка';
         this.modalBody.innerHTML = this.cleanHtmlDescription(post.description);
