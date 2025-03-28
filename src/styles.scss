@@ -4,13 +4,24 @@ body {
     padding: 20px;
 }
 
+.mx-auto {
+    display: block;
+}
+
 .rss-form {
     max-width: 600px;
+    padding: 20px;
     margin: 0 auto;
 }
 
 .form-floating {
     margin-bottom: 0rem;
+}
+
+.btn {
+    min-width: auto;
+    min-height: 55px;
+    margin: 0 auto;
 }
 
 .preview-btn {

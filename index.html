@@ -11,13 +11,13 @@
             <div class="mx-auto">
                 <h1 id="title">RSS агрегатор</h1>
                 <p id="description">Добавьте RSS и читайте любимые новости в одном месте</p>
-                <form class="rss-form text-body">
+                <form class="rss-form text-body" novalidate>
                     <div class="row">
                         <div class="col">
                             <div class="form-floating">
                                 <input 
                                     id="url-input"
-                                    type="url"
+                                    type="text"
                                     name="url"
                                     aria-label="url"
                                     placeholder="Ссылка RSS"
@@ -33,7 +33,7 @@
                                 id="submit-button"
                                 type="submit"
                                 aria-label="add"
-                                class="h-100 btn btn-lg btn-primary px-sm-5">
+                                class="btn btn-primary py-2 px-4">
                                 Добавить
                             </button>
                         </div>
