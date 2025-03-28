@@ -35,9 +35,7 @@ class View {
   addPost(newPost) {
     console.log('Добавление поста(ов):', Array.isArray(newPost) ? newPost.length : 1);
     const postsToAdd = Array.isArray(newPost) ? newPost : [newPost];
-    const uniquePosts = postsToAdd.filter(post =>
-      (!this.state.posts.some(p => p.link === post.link)
-      ));
+    const uniquePosts = postsToAdd.filter((post) => (!this.state.posts.some(p => p.link === post.link)));
 
     if (uniquePosts.length > 0) {
       this.state.posts = [...this.state.posts, ...uniquePosts];
@@ -91,7 +89,7 @@ class View {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
-  
+
   cleanHtmlDescription(html) {
     if (!html) return '';
     const container = this.cleanContainer || document.createElement('div');
@@ -112,7 +110,7 @@ class View {
     this.state.form.valid = true;
     this.state.form.error = null;
     this.state.form.successMessage = message;
- 
+
     if (this.feedback) {
       this.feedback.textContent = message;
       this.feedback.classList.add('text-success', 'd-block');
@@ -122,7 +120,7 @@ class View {
 
   render() {
     this.input.value = this.state.form.url;
- 
+
     if (!this.state.form.valid) {
       this.input.classList.add('is-invalid');
       this.feedback.textContent = this.state.form.error;
@@ -173,7 +171,7 @@ class View {
       const btn = e.target.closest('.preview-btn');
       if (!btn || !this.modal) return;
 
-      const postLink = btn.dataset.postLink;
+      const { postLink } = btn.dataset;
       const post = this.state.posts.find((p) => p.link === postLink);
 
       if (post) {

@@ -40,7 +40,7 @@ const schema = createSchema(view);
 
 console.log('Запуск приложения');
 
-const checkForRss = (state, view) => {
+const checkForRss = () => {
   console.log('Проверка обновлений RSS...');
   const { feeds, posts } = state;
   console.log('Текущее количество фидов и постов:', feeds.length, posts.length);
