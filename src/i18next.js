@@ -10,7 +10,7 @@ const createI18n = () => {
           translation: {
             rssForm: {
               title: 'RSS Агрегатор',
-              description: 'Начните читать RSS сегодня!',
+              description: 'Добавьте RSS и читайте любимые новости в одном месте',
               inputPlaceholder: 'Ссылка RSS',
               submitButton: 'Добавить',
               loading: 'Загрузка RSS потока...',

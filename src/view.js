@@ -66,17 +66,10 @@ export default class View {
   }
 
   showError(message) {
-    const { feedback, input } = this.elements;
-  
-    feedback.textContent = message;
-    feedback.className = 'feedback text-danger';
-    input.classList.add('is-invalid');
-  
-    feedback.style.display = 'block';
-    feedback.style.opacity = '1';
-    feedback.style.visibility = 'visible';
-  
-    void feedback.offsetHeight;
+    this.clearInput();
+    this.elements.feedback.textContent = message;
+    this.elements.feedback.className = 'feedback text-danger';
+    this.elements.input.classList.add('is-invalid');
   }
 
   initFormHandler(callback) {
@@ -91,6 +84,12 @@ export default class View {
       const btn = e.target.closest('.preview-btn');
       if (btn) callback(btn.dataset.link);
     });
+  }
+
+  clearInput() {
+    this.elements.input.value = '';
+    this.elements.input.classList.remove('is-invalid');
+    this.elements.input.blur();
   }
 
   escape(html) {

@@ -26,6 +26,7 @@ const runApp = () => {
           view.renderFeeds(state.feeds);
           view.renderPosts(state.posts, state.readPosts);
           view.showSuccess(i18next.t('rssForm.success'));
+          view.clearInput();
           
           startFeedUpdates(state, view);
         })
