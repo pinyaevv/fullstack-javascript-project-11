@@ -3,7 +3,7 @@
   "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "RSS aggregator",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
     "start": "webpack serve --open",
     "build": "webpack --mode production",
@@ -29,7 +29,7 @@
     "globals": "^16.0.0",
     "html-webpack-plugin": "^5.6.3",
     "postcss-loader": "^7.3.4",
-    "sass": "^1.86.0",
+    "sass": "^1.86.2",
     "sass-loader": "^16.0.5",
     "style-loader": "^3.3.4",
     "url-loader": "^4.1.1",
@@ -42,6 +42,7 @@
     "axios": "^1.8.4",
     "i18next": "^24.2.3",
     "on-change": "^5.0.1",
+    "pino": "^9.6.0",
     "yup": "^1.6.1"
   }
 }
