@@ -6,7 +6,6 @@ export default class View {
     this.elements = elements;
     this.i18next = i18next;
     this.modal = elements.modal ? new Modal(elements.modal) : null;
-    this.escape = this.escape.bind(this);
   }
 
   setTranslations() {
@@ -23,11 +22,9 @@ export default class View {
     submitButton.textContent = this.i18next.t('rssForm.submitButton');
   }
 
-  static escape(html) {
-    if (this.config?.debug) {
-      console.log('Escaping HTML:', html);
-    }
-
+  escape(html) {
+    // eslint-disable-next-line class-methods-use-this, no-unused-expressions
+    (this);
     const div = document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
