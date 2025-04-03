@@ -22,7 +22,7 @@ const createI18n = () => {
             errors: {
               required: 'Не должно быть пустым',
               notOneOf: 'RSS уже существует',
-              url: 'Некорректный URL',
+              url: 'Ссылка должна быть валидным URL',
               invalidRss: 'Ресурс не содержит валидный RSS',
               network: 'Ошибка сети',
             },
