@@ -92,7 +92,7 @@ export default class View {
     this.elements.input.blur();
   }
 
-  static escape(html) {
+  escape(html) {
     const div = document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
