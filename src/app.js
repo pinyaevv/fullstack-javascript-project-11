@@ -10,11 +10,14 @@ const runApp = () => {
   initApp().then(({ elements, state, i18next }) => {
     const view = new View(elements, i18next);
     const schema = createSchema(i18next);
+    const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
 
     const handleFormSubmit = (url) => {
-      schema.validate({ url })
+      const normalizedUrl = normalizeUrl(url);
+
+      schema.validate({ url: normalizedUrl })
         .then(() => {
-          if (state.addedUrls.includes(url)) {
+          if (state.addedUrls.some((u) => normalizeUrl(u) === normalizedUrl)) {
             throw new Error(i18next.t('errors.notOneOf'));
           }
           return fetchRSS(url);
