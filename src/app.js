@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.scss';
-import { initApp } from './index.js';
+import initApp from './index.js';
 import View from './view.js';
 import { fetchRSS, parserRSS } from './rss.js';
 import createSchema from './validation.js';
