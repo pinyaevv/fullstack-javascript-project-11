@@ -9,11 +9,24 @@ export default class View {
   }
 
   setTranslations() {
-    const { title, description, inputLabel, submitButton } = this.elements;
+    const {
+      title,
+      description,
+      inputLabel,
+      submitButton,
+    } = this.elements;
+
     title.textContent = this.i18next.t('rssForm.title');
     description.textContent = this.i18next.t('rssForm.description');
     inputLabel.textContent = this.i18next.t('rssForm.inputPlaceholder');
     submitButton.textContent = this.i18next.t('rssForm.submitButton');
+  }
+
+  escape(html) {
+    this;
+    const div = document.createElement('div');
+    div.textContent = html;
+    return div.innerHTML;
   }
 
   renderFeeds(feeds) {
@@ -90,11 +103,5 @@ export default class View {
     this.elements.input.value = '';
     this.elements.input.classList.remove('is-invalid');
     this.elements.input.blur();
-  }
-
-  escape(html) {
-    const div = document.createElement('div');
-    div.textContent = html;
-    return div.innerHTML;
   }
 }
