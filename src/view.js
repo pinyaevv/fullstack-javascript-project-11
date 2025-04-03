@@ -6,6 +6,7 @@ export default class View {
     this.elements = elements;
     this.i18next = i18next;
     this.modal = elements.modal ? new Modal(elements.modal) : null;
+    this.escape = this.escape.bind(this);
   }
 
   setTranslations() {
@@ -22,8 +23,11 @@ export default class View {
     submitButton.textContent = this.i18next.t('rssForm.submitButton');
   }
 
-  escape(html) {
-    this;
+  static escape(html) {
+    if (this.config?.debug) {
+      console.log('Escaping HTML:', html);
+    }
+
     const div = document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
