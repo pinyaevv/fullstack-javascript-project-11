@@ -66,9 +66,17 @@ export default class View {
   }
 
   showError(message) {
-    this.elements.feedback.textContent = message;
-    this.elements.feedback.className = 'feedback text-danger';
-    this.elements.input.classList.add('is-invalid');
+    const { feedback, input } = this.elements;
+  
+    feedback.textContent = message;
+    feedback.className = 'feedback text-danger';
+    input.classList.add('is-invalid');
+  
+    feedback.style.display = 'block';
+    feedback.style.opacity = '1';
+    feedback.style.visibility = 'visible';
+  
+    void feedback.offsetHeight;
   }
 
   initFormHandler(callback) {
