@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-const createSchema = (i18next) => {
+const createSchema = (i18next, addedUrls = []) => {
   yup.setLocale({
     mixed: {
       required: i18next.t('errors.required'),
@@ -15,7 +15,8 @@ const createSchema = (i18next) => {
     url: yup
       .string()
       .required()
-      .url(),
+      .url()
+      .notOneOf(addedUrls),
   });
 };
 

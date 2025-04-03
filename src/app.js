@@ -9,35 +9,32 @@ import logger from './logger.js';
 const runApp = () => {
   initApp().then(({ elements, state, i18next }) => {
     const view = new View(elements, i18next);
-    const schema = createSchema(i18next);
     const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
 
     const handleFormSubmit = (url) => {
       const normalizedUrl = normalizeUrl(url);
+      const currentSchema = createSchema(i18next, state.addedUrls.map(normalizeUrl));
 
-      schema.validate({ url: normalizedUrl })
-        .then(() => {
-          if (state.addedUrls.some((u) => normalizeUrl(u) === normalizedUrl)) {
-            throw new Error('notOneOf');
-          }
-          return fetchRSS(url);
-        })
+      currentSchema.validate({ url: normalizedUrl }, { abortEarly: false })
+        .then(() => fetchRSS(url))
         .then(parserRSS)
         .then(({ feed, posts }) => {
+          state.addedUrls.push(url);
           state.feeds.unshift({ ...feed, url });
           state.posts.unshift(...posts);
-          state.addedUrls.push(url);
           
           view.renderFeeds(state.feeds);
           view.renderPosts(state.posts, state.readPosts);
           view.showSuccess(i18next.t('rssForm.success'));
           
-          startFeedUpdates(state, view, i18next);
+          startFeedUpdates(state, view);
         })
         .catch((error) => {
           let errorMessage;
-
-          if (error.message === 'InvalidRSS') {
+          
+          if (error.name === 'ValidationError') {
+            errorMessage = error.errors[0];
+          } else if (error.message === 'InvalidRSS') {
             errorMessage = i18next.t('errors.invalidRss');
           } else if (error.message.includes('network')) {
             errorMessage = i18next.t('errors.network');
@@ -82,9 +79,7 @@ const startFeedUpdates = (state, view) => {
     );
 
     Promise.all(promises)
-      .finally(() => {
-        setTimeout(update, 5000);
-      });
+      .finally(() => setTimeout(update, 5000));
   };
   
   update();
