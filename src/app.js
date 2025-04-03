@@ -18,7 +18,7 @@ const runApp = () => {
       schema.validate({ url: normalizedUrl })
         .then(() => {
           if (state.addedUrls.some((u) => normalizeUrl(u) === normalizedUrl)) {
-            throw new Error(i18next.t('errors.notOneOf'));
+            throw new Error('notOneOf');
           }
           return fetchRSS(url);
         })
