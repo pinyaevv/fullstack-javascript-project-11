@@ -17,7 +17,7 @@ export default class View {
   }
 
   renderFeeds(feeds) {
-    this.elements.feedsContainer.innerHTML = feeds.map(feed => `
+    this.elements.feedsContainer.innerHTML = feeds.map((feed) => `
       <div class="card mb-3">
         <div class="card-body">
           <h4>${this.escape(feed.title)}</h4>
@@ -28,7 +28,7 @@ export default class View {
   }
 
   renderPosts(posts, readPosts) {
-    this.elements.postsContainer.innerHTML = posts.map(post => `
+    this.elements.postsContainer.innerHTML = posts.map((post) => `
       <div class="card mb-3">
         <div class="card-body d-flex justify-content-between align-items-center">
           <a href="${this.escape(post.link)}" 
@@ -92,7 +92,7 @@ export default class View {
     this.elements.input.blur();
   }
 
-  escape(html) {
+  static escape(html) {
     const div = document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
