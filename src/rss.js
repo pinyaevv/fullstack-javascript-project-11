@@ -13,10 +13,11 @@ export const fetchRSS = (url) => {
         resolve(response.data.contents);
       })
       .catch((error) => {
-        reject(new Error(
-          error.message.includes('network') 
-            ? 'Network error' : 'InvalidRSS',
-        ));
+        const errorType = (error.code === 'ECONNABORTED' || 
+          error.message.includes('network') || 
+          error.isAxiosError) ? 'network' : 'invalidRss';
+
+        reject(new Error(errorType));
       });
   });
 };
