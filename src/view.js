@@ -22,9 +22,7 @@ export default class View {
     submitButton.textContent = this.i18next.t('rssForm.submitButton');
   }
 
-  escape(html) {
-    // eslint-disable-next-line class-methods-use-this, no-unused-expressions
-    (this);
+  static escape(html) {
     const div = document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
@@ -34,8 +32,8 @@ export default class View {
     this.elements.feedsContainer.innerHTML = feeds.map((feed) => `
       <div class="card mb-3">
         <div class="card-body">
-          <h4>${this.escape(feed.title)}</h4>
-          <p>${this.escape(feed.description)}</p>
+          <h4>${View.escape(feed.title)}</h4>
+          <p>${View.escape(feed.description)}</p>
         </div>
       </div>
     `).join('');
@@ -45,13 +43,13 @@ export default class View {
     this.elements.postsContainer.innerHTML = posts.map((post) => `
       <div class="card mb-3">
         <div class="card-body d-flex justify-content-between align-items-center">
-          <a href="${this.escape(post.link)}" 
+          <a href="${View.escape(post.link)}" 
              target="_blank"
              class="${readPosts.has(post.link) ? 'fw-normal' : 'fw-bold'}">
-            ${this.escape(post.title)}
+            ${View.escape(post.title)}
           </a>
           <button class="btn btn-sm btn-outline-primary preview-btn"
-                  data-link="${this.escape(post.link)}">
+                  data-link="${View.escape(post.link)}">
             ${this.i18next.t('ui.preview')}
           </button>
         </div>
@@ -63,7 +61,7 @@ export default class View {
     if (!this.modal) return;
     const modalTitle = this.elements.modal.querySelector('.modal-title');
     const modalBody = this.elements.modal.querySelector('.modal-body');
-    modalTitle.textContent = this.escape(title);
+    modalTitle.textContent = View.escape(title);
     modalBody.textContent = content;
     this.modal.show();
   }
