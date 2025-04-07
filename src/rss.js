@@ -35,9 +35,9 @@ export const parserRSS = (data) => new Promise((resolve, reject) => {
     };
 
     const posts = Array.from(doc.querySelectorAll('item')).map((item) => ({
-      title: item.querySelector('title')?.textContent?.trim() || 'No title',
+      title: item.querySelector('title')?.textContent || 'No title',
       link: item.querySelector('link')?.textContent?.trim() || '#',
-      description: item.querySelector('description')?.textContent?.trim() || '',
+      description: item.querySelector('description')?.textContent || '',
     }));
 
     resolve({ feed, posts });

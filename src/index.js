@@ -1,6 +1,6 @@
 import createI18n from './i18next.js';
 
-const initApp = () => new Promise((resolve) => {
+const initApp = () => {
   const elements = {
     form: document.querySelector('.rss-form'),
     input: document.getElementById('url-input'),
@@ -15,11 +15,13 @@ const initApp = () => new Promise((resolve) => {
     posts: [],
     addedUrls: [],
     readPosts: new Set(),
+    process: {
+      state: 'ready',
+      error: null,
+    },
   };
 
-  createI18n().then((i18next) => {
-    resolve({ elements, state, i18next });
-  });
-});
+  return createI18n().then((i18next) => ({ elements, state, i18next }));
+};
 
 export default initApp;

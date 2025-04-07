@@ -1,23 +1,48 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.scss';
 import initApp from './index.js';
-import View from './view.js';
 import { fetchRSS, parserRSS } from './rss.js';
 import createSchema from './validation.js';
 import logger from './logger.js';
+import createView from './view.js';
 
-const startFeedUpdates = (state, view) => {
+class StateObserver {
+  constructor() {
+    this.subscribers = [];
+    this.previousState = null;
+  }
+
+  subscribe(callback) {
+    this.subscribers.push(callback);
+    if (this.previousState) {
+      callback(this.previousState);
+    }
+  }
+
+  notify(newState) {
+    this.previousState = { ...newState };
+    this.subscribers.forEach((cb) => cb(newState));
+  }
+}
+
+const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
+
+const startFeedUpdates = (state, observer) => {
   const update = () => {
     const promises = state.addedUrls.map((url) => fetchRSS(url)
       .then(parserRSS)
       .then(({ posts }) => {
         const newPosts = posts.filter((post) => !state.posts.some((p) => p.link === post.link));
+
         if (newPosts.length) {
           state.posts.unshift(...newPosts);
-          view.renderPosts(state.posts, state.readPosts);
+          observer.notify(state);
         }
       })
-      .catch(logger.error));
+      .catch((error) => {
+        state.lastError = { message: 'Ошибка обновления фида', details: error };
+        observer.notify(state);
+      }));
 
     Promise.all(promises)
       .finally(() => setTimeout(update, 5000));
@@ -28,10 +53,44 @@ const startFeedUpdates = (state, view) => {
 
 const runApp = () => {
   initApp().then(({ elements, state, i18next }) => {
-    const view = new View(elements, i18next);
-    const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
+    const observer = new StateObserver();
+    const view = createView(elements, i18next);
+
+    observer.subscribe((currentState) => {
+      switch (currentState.process.state) {
+      case 'sending':
+        view.showLoading();
+        break;
+
+      case 'success':
+        view.showSuccess(i18next.t('rssForm.success'));
+        setTimeout(() => {
+          state.process.state = 'ready';
+          observer.notify(state);
+        }, 3000);
+        break;
+
+      case 'error':
+        view.showError(currentState.process.error);
+        break;
+
+      case 'ready':
+      default:
+        view.clearInput();
+        elements.feedback.className = 'feedback';
+        break;
+      }
+      view.renderFeeds(currentState.feeds);
+      view.renderPosts(currentState.posts, currentState.readPosts);
+
+      if (currentState.lastError) {
+        view.showError(currentState.lastError.message);
+      }
+    });
 
     const handleFormSubmit = (url) => {
+      state.process.state = 'sending';
+      state.process.error = null;
       const normalizedUrl = normalizeUrl(url);
       const currentSchema = createSchema(i18next, state.addedUrls.map(normalizeUrl));
 
@@ -43,14 +102,14 @@ const runApp = () => {
           state.feeds.unshift({ ...feed, url });
           state.posts.unshift(...posts);
 
-          view.renderFeeds(state.feeds);
-          view.renderPosts(state.posts, state.readPosts);
+          observer.notify(state);
           view.showSuccess(i18next.t('rssForm.success'));
-          view.clearInput();
 
-          startFeedUpdates(state, view);
+          startFeedUpdates(state, observer);
         })
         .catch((error) => {
+          state.process.state = 'error';
+          state.process.error = view.showError(error);
           let errorMessage;
 
           if (error.name === 'ValidationError') {
@@ -65,21 +124,27 @@ const runApp = () => {
           }
 
           logger.error('Form error:', error);
-          view.showError(errorMessage);
+          state.lastError = {
+            message: errorMessage,
+          };
+
+          observer.notify(state);
         });
     };
 
     const handlePreview = (postLink) => {
       state.readPosts.add(postLink);
+      observer.notify(state);
+
       const post = state.posts.find((p) => p.link === postLink);
       if (post) {
         view.showPostModal(post.title, post.description);
-        view.renderPosts(state.posts, state.readPosts);
       }
     };
 
     view.initFormHandler(handleFormSubmit);
     view.initPreviewHandlers(handlePreview);
+    observer.notify(state);
   }).catch(logger.error);
 };
 

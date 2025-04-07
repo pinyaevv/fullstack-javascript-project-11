@@ -1,106 +1,111 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal } from 'bootstrap';
+import { escape } from 'lodash';
 
-export default class View {
-  constructor(elements, i18next) {
-    this.elements = elements;
-    this.i18next = i18next;
-    this.modal = elements.modal ? new Modal(elements.modal) : null;
-  }
+const renderFeed = (feed, escape) => `
+  <div class="card mb-3">
+    <div class="card-body">
+      <h4>${escape(feed.title)}</h4>
+      <p>${escape(feed.description)}</p>
+    </div>
+  </div>
+`;
 
-  setTranslations() {
-    const {
-      title,
-      description,
-      inputLabel,
-      submitButton,
-    } = this.elements;
+const renderPost = (post, isRead, previewText, escape) => `
+  <div class="card mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center">
+      <a href="${escape(post.link)}" 
+        target="_blank"
+        class="${isRead ? 'fw-normal' : 'fw-bold'}">
+        ${escape(post.title)}
+      </a>
+      <button class="btn btn-sm btn-outline-primary preview-btn ms-2"
+        data-link="${escape(post.link)}">
+        ${previewText}
+      </button>
+    </div>
+  </div>
+`;
 
-    title.textContent = this.i18next.t('rssForm.title');
-    description.textContent = this.i18next.t('rssForm.description');
-    inputLabel.textContent = this.i18next.t('rssForm.inputPlaceholder');
-    submitButton.textContent = this.i18next.t('rssForm.submitButton');
-  }
+const createView = (elements, i18next) => {
+  const modal = elements.modal ? new Modal(elements.modal) : null;
 
-  static escape(html) {
-    const div = document.createElement('div');
-    div.textContent = html;
-    return div.innerHTML;
-  }
+  return {
+    setTranslations() {
+      const { title, description, inputLabel, submitButton } = elements;
+      title.textContent = i18next.t('rssForm.title');
+      description.textContent = i18next.t('rssForm.description');
+      inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
+      submitButton.textContent = i18next.t('rssForm.submitButton');
+    },
 
-  renderFeeds(feeds) {
-    this.elements.feedsContainer.innerHTML = feeds.map((feed) => `
-      <div class="card mb-3">
-        <div class="card-body">
-          <h4>${View.escape(feed.title)}</h4>
-          <p>${View.escape(feed.description)}</p>
-        </div>
-      </div>
-    `).join('');
-  }
+    renderFeeds(feeds) {
+      elements.feedsContainer.innerHTML = feeds
+        .map((feed) => renderFeed(feed, escape))
+        .join('');
+    },
 
-  renderPosts(posts, readPosts) {
-    this.elements.postsContainer.innerHTML = posts.map((post) => `
-      <div class="card mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <a href="${View.escape(post.link)}" 
-             target="_blank"
-             class="${readPosts.has(post.link) ? 'fw-normal' : 'fw-bold'}">
-            ${View.escape(post.title)}
-          </a>
-          <button class="btn btn-sm btn-outline-primary preview-btn"
-                  data-link="${View.escape(post.link)}">
-            ${this.i18next.t('ui.preview')}
-          </button>
-        </div>
-      </div>
-    `).join('');
-  }
+    renderPosts(posts, readPosts) {
+      elements.postsContainer.innerHTML = posts
+        .map((post) => renderPost(
+          post,
+          readPosts.has(post.link),
+          i18next.t('ui.preview'),
+          escape,
+        ))
+        .join('');
+    },
 
-  showPostModal(title, content) {
-    if (!this.modal) return;
-    const modalTitle = this.elements.modal.querySelector('.modal-title');
-    const modalBody = this.elements.modal.querySelector('.modal-body');
-    modalTitle.textContent = View.escape(title);
-    modalBody.textContent = content;
-    this.modal.show();
-  }
+    showPostModal(title, content) {
+      if (!modal) return;
+      elements.feedback.textContent = '';
+      elements.feedback.className = 'feedback';
 
-  showLoading() {
-    this.elements.feedback.textContent = this.i18next.t('rssForm.loading');
-    this.elements.feedback.className = 'feedback text-info';
-  }
+      const modalTitle = elements.modal.querySelector('.modal-title');
+      const modalBody = elements.modal.querySelector('.modal-body');
+      modalTitle.textContent = title;
+      modalBody.textContent = content;
+      modal.show();
+    },
 
-  showSuccess(message) {
-    this.elements.feedback.textContent = message;
-    this.elements.feedback.className = 'feedback text-success';
-    this.elements.input.classList.remove('is-invalid');
-  }
+    showLoading() {
+      elements.feedback.textContent = i18next.t('rssForm.loading');
+      elements.feedback.className = 'feedback text-info';
+    },
 
-  showError(message) {
-    this.clearInput();
-    this.elements.feedback.textContent = message;
-    this.elements.feedback.className = 'feedback text-danger';
-    this.elements.input.classList.add('is-invalid');
-  }
+    showSuccess(message) {
+      elements.feedback.textContent = message;
+      elements.feedback.className = 'feedback text-success';
+      elements.input.classList.remove('is-invalid');
+    },
 
-  initFormHandler(callback) {
-    this.elements.form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      callback(this.elements.input.value.trim());
-    });
-  }
+    showError(message) {
+      this.clearInput();
+      elements.feedback.textContent = message;
+      elements.feedback.className = 'feedback text-danger';
+      elements.input.classList.add('is-invalid');
+    },
 
-  initPreviewHandlers(callback) {
-    this.elements.postsContainer.addEventListener('click', (e) => {
-      const btn = e.target.closest('.preview-btn');
-      if (btn) callback(btn.dataset.link);
-    });
-  }
+    initFormHandler(callback) {
+      elements.form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        callback(elements.input.value.trim());
+      });
+    },
 
-  clearInput() {
-    this.elements.input.value = '';
-    this.elements.input.classList.remove('is-invalid');
-    this.elements.input.blur();
-  }
-}
+    initPreviewHandlers(callback) {
+      elements.postsContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.preview-btn');
+        if (btn) callback(btn.dataset.link);
+      });
+    },
+
+    clearInput() {
+      elements.input.value = '';
+      elements.input.classList.remove('is-invalid');
+      elements.input.blur();
+    },
+  };
+};
+
+export default createView;
