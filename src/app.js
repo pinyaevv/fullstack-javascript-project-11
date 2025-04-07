@@ -27,21 +27,28 @@ class StateObserver {
 
 const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
 
-const startFeedUpdates = (state, observer) => {
+const startFeedUpdates = (currentState, observer) => {
   const update = () => {
-    const promises = state.addedUrls.map((url) => fetchRSS(url)
+    const promises = currentState.addedUrls.map((url) => fetchRSS(url)
       .then(parserRSS)
       .then(({ posts }) => {
-        const newPosts = posts.filter((post) => !state.posts.some((p) => p.link === post.link));
+        const newPosts = posts
+          .filter((post) => !currentState.posts.some((p) => p.link === post.link));
 
         if (newPosts.length) {
-          state.posts.unshift(...newPosts);
-          observer.notify(state);
+          const updatedState = {
+            ...currentState,
+            posts: [...newPosts, ...currentState.posts],
+          };
+          observer.notify(updatedState);
         }
       })
       .catch((error) => {
-        state.lastError = { message: 'Ошибка обновления фида', details: error };
-        observer.notify(state);
+        const updatedState = {
+          ...currentState,
+          lastError: { message: 'Ошибка обновления фида', details: error },
+        };
+        observer.notify(updatedState);
       }));
 
     Promise.all(promises)
@@ -52,35 +59,57 @@ const startFeedUpdates = (state, observer) => {
 };
 
 const runApp = () => {
-  initApp().then(({ elements, state, i18next }) => {
+  initApp().then(({ elements: initialElements, state, i18next }) => {
     const observer = new StateObserver();
-    const view = createView(elements, i18next);
+    const view = createView(initialElements, i18next);
+    let appState = { ...state };
+    let elements = { ...initialElements };
 
     observer.subscribe((currentState) => {
-      elements.input.value = currentState.ui.inputValue;
+      appState = currentState;
+      // Создаем новый объект elements вместо изменения параметра
+      elements = {
+        ...elements,
+        input: {
+          ...elements.input,
+          value: currentState.ui.inputValue,
+        },
+      };
+
       switch (currentState.process.state) {
         case 'sending':
           view.showLoading();
           break;
-
         case 'success':
           view.showSuccess(i18next.t('rssForm.success'));
           setTimeout(() => {
-            state.process.state = 'ready';
-            observer.notify(state);
+            const updatedState = {
+              ...appState,
+              process: {
+                ...appState.process,
+                state: 'ready',
+              },
+            };
+            observer.notify(updatedState);
           }, 3000);
           break;
-
         case 'error':
           view.showError(currentState.process.error);
           break;
-
         case 'ready':
         default:
           view.clearInput();
-          elements.feedback.className = 'feedback';
+          // Создаем новый объект вместо изменения параметра
+          elements = {
+            ...elements,
+            feedback: {
+              ...elements.feedback,
+              className: 'feedback',
+            },
+          };
           break;
       }
+
       view.renderFeeds(currentState.feeds);
       view.renderPosts(currentState.posts, currentState.readPosts);
 
@@ -90,37 +119,49 @@ const runApp = () => {
     });
 
     const handleFormSubmit = (url) => {
-      state.ui.inputValue = url;
-      state.process.state = 'sending';
-      state.process.error = null;
-      observer.notify(state);
+      const updatedState = {
+        ...appState,
+        ui: {
+          ...appState.ui,
+          inputValue: url,
+        },
+        process: {
+          ...appState.process,
+          state: 'sending',
+          error: null,
+        },
+        lastError: null,
+      };
+      observer.notify(updatedState);
 
       const normalizedUrl = normalizeUrl(url);
-      const currentSchema = createSchema(i18next, state.addedUrls.map(normalizeUrl));
+      const currentSchema = createSchema(i18next, appState.addedUrls.map(normalizeUrl));
 
       currentSchema.validate({ url: normalizedUrl }, { abortEarly: false })
         .then(() => fetchRSS(url))
         .then(parserRSS)
         .then(({ feed, posts }) => {
-          state.addedUrls.push(url);
-          state.feeds.unshift({ ...feed, url });
-          state.posts.unshift(...posts);
-
-          state.ui.inputValue = '';
-          observer.notify(state);
-
-          view.showSuccess(i18next.t('rssForm.success'));
-
-          startFeedUpdates(state, observer);
+          const successState = {
+            ...appState,
+            addedUrls: [...appState.addedUrls, url],
+            feeds: [{ ...feed, url }, ...appState.feeds],
+            posts: [...posts, ...appState.posts],
+            ui: {
+              ...appState.ui,
+              inputValue: '',
+            },
+            process: {
+              ...appState.process,
+              state: 'success',
+            },
+          };
+          observer.notify(successState);
+          startFeedUpdates(successState, observer);
         })
         .catch((error) => {
-          state.process.state = 'error';
-          state.process.error = view.showError(error);
           let errorMessage;
-
           if (error.name === 'ValidationError') {
-            const [firstError] = error.errors;
-            errorMessage = firstError;
+            [errorMessage] = error.errors;
           } else if (error.message === 'InvalidRSS') {
             errorMessage = i18next.t('errors.invalidRss');
           } else if (error.message.includes('network')) {
@@ -129,20 +170,30 @@ const runApp = () => {
             errorMessage = error.message;
           }
 
-          logger.error('Form error:', error);
-          state.lastError = {
-            message: errorMessage,
+          const errorState = {
+            ...appState,
+            process: {
+              ...appState.process,
+              state: 'error',
+              error: errorMessage,
+            },
+            lastError: {
+              message: errorMessage,
+            },
           };
-
-          observer.notify(state);
+          observer.notify(errorState);
+          logger.error('Form error:', error);
         });
     };
 
     const handlePreview = (postLink) => {
-      state.readPosts.add(postLink);
-      observer.notify(state);
+      const updatedState = {
+        ...appState,
+        readPosts: new Set([...appState.readPosts, postLink]),
+      };
+      observer.notify(updatedState);
 
-      const post = state.posts.find((p) => p.link === postLink);
+      const post = appState.posts.find((p) => p.link === postLink);
       if (post) {
         view.showPostModal(post.title, post.description);
       }
@@ -150,7 +201,7 @@ const runApp = () => {
 
     view.initFormHandler(handleFormSubmit);
     view.initPreviewHandlers(handlePreview);
-    observer.notify(state);
+    observer.notify(appState);
   }).catch(logger.error);
 };
 
