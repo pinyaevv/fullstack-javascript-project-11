@@ -27,29 +27,21 @@ class StateObserver {
 
 const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
 
-const startFeedUpdates = (currentState, observer) => {
+const startFeedUpdates = (state, observer) => {
   const update = () => {
-    const promises = currentState.addedUrls.map((url) => fetchRSS(url)
+    const promises = state.addedUrls.map((url) => fetchRSS(url)
       .then(parserRSS)
       .then(({ posts }) => {
-        const newPosts = posts.filter((post) => !currentState.posts
-          .some((p) => p.link === post.link));
+        const newPosts = posts.filter((post) => !state.posts.some((p) => p.link === post.link));
 
         if (newPosts.length) {
-          const updatedState = {
-            ...currentState,
-            posts: [...newPosts, ...currentState.posts],
-            lastError: null,
-          };
-          observer.notify(updatedState);
+          state.posts.unshift(...newPosts);
+          observer.notify(state);
         }
       })
       .catch((error) => {
-        const errorState = {
-          ...currentState,
-          lastError: { message: 'Ошибка обновления фида', details: error },
-        };
-        observer.notify(errorState);
+        state.lastError = { message: 'Ошибка обновления фида', details: error };
+        observer.notify(state);
       }));
 
     Promise.all(promises)
@@ -60,68 +52,72 @@ const startFeedUpdates = (currentState, observer) => {
 };
 
 const runApp = () => {
-  initApp().then(({ elements, initialState, i18next }) => {
+  initApp().then(({ elements, state, i18next }) => {
     const observer = new StateObserver();
     const view = createView(elements, i18next);
 
     observer.subscribe((currentState) => {
-      const newElements = { ...elements };
-      newElements.input.value = currentState.ui.inputValue || '';
-
+      elements.input.value = currentState.ui.inputValue;
       switch (currentState.process.state) {
         case 'sending':
           view.showLoading();
           break;
+
         case 'success':
           view.showSuccess(i18next.t('rssForm.success'));
           setTimeout(() => {
-            const readyState = {
-              ...currentState,
-              process: { state: 'ready', error: null },
-            };
-            observer.notify(readyState);
+            state.process.state = 'ready';
+            observer.notify(state);
           }, 3000);
           break;
+
         case 'error':
           view.showError(currentState.process.error);
           break;
+
+        case 'ready':
         default:
           view.clearInput();
-          newElements.feedback.className = 'feedback';
+          elements.feedback.className = 'feedback';
+          break;
       }
-
       view.renderFeeds(currentState.feeds);
       view.renderPosts(currentState.posts, currentState.readPosts);
+
+      if (currentState.lastError) {
+        view.showError(currentState.lastError.message);
+      }
     });
 
     const handleFormSubmit = (url) => {
-      const sendingState = {
-        ...initialState,
-        ui: { inputValue: url },
-        process: { state: 'sending', error: null },
-      };
-      observer.notify(sendingState);
+      state.ui.inputValue = url;
+      state.process.state = 'sending';
+      state.process.error = null;
+      observer.notify(state);
 
       const normalizedUrl = normalizeUrl(url);
-      const currentSchema = createSchema(i18next, initialState.addedUrls.map(normalizeUrl));
+      const currentSchema = createSchema(i18next, state.addedUrls.map(normalizeUrl));
 
       currentSchema.validate({ url: normalizedUrl }, { abortEarly: false })
         .then(() => fetchRSS(url))
         .then(parserRSS)
         .then(({ feed, posts }) => {
-          const successState = {
-            ...sendingState,
-            addedUrls: [...sendingState.addedUrls, url],
-            feeds: [{ ...feed, url }, ...sendingState.feeds],
-            posts: [...posts, ...sendingState.posts],
-            ui: { inputValue: '' },
-            process: { state: 'success', error: null },
-          };
-          observer.notify(successState);
-          startFeedUpdates(successState, observer);
+          state.addedUrls.push(url);
+          state.feeds.unshift({ ...feed, url });
+          state.posts.unshift(...posts);
+
+          state.ui.inputValue = '';
+          observer.notify(state);
+
+          view.showSuccess(i18next.t('rssForm.success'));
+
+          startFeedUpdates(state, observer);
         })
         .catch((error) => {
+          state.process.state = 'error';
+          state.process.error = view.showError(error);
           let errorMessage;
+
           if (error.name === 'ValidationError') {
             const [firstError] = error.errors;
             errorMessage = firstError;
@@ -134,23 +130,19 @@ const runApp = () => {
           }
 
           logger.error('Form error:', error);
-          const errorState = {
-            ...sendingState,
-            process: { state: 'error', error: errorMessage },
-            lastError: { message: errorMessage },
+          state.lastError = {
+            message: errorMessage,
           };
-          observer.notify(errorState);
+
+          observer.notify(state);
         });
     };
 
     const handlePreview = (postLink) => {
-      const updatedState = {
-        ...initialState,
-        readPosts: new Set([...initialState.readPosts, postLink]),
-      };
-      observer.notify(updatedState);
+      state.readPosts.add(postLink);
+      observer.notify(state);
 
-      const post = initialState.posts.find((p) => p.link === postLink);
+      const post = state.posts.find((p) => p.link === postLink);
       if (post) {
         view.showPostModal(post.title, post.description);
       }
@@ -158,7 +150,7 @@ const runApp = () => {
 
     view.initFormHandler(handleFormSubmit);
     view.initPreviewHandlers(handlePreview);
-    observer.notify(initialState);
+    observer.notify(state);
   }).catch(logger.error);
 };
 
