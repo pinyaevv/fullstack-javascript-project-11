@@ -1,110 +1,122 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal } from 'bootstrap';
-import { escape } from 'lodash';
+import { escape as escapeHtml } from 'lodash';
 
-const renderFeed = (feed, escape) => `
+const renderFeed = (feed, escapeFn) => `
   <div class="card mb-3">
     <div class="card-body">
-      <h4>${escape(feed.title)}</h4>
-      <p>${escape(feed.description)}</p>
+      <h4>${escapeFn(feed.title)}</h4>
+      <p>${escapeFn(feed.description)}</p>
     </div>
   </div>
 `;
 
-const renderPost = (post, isRead, previewText, escape) => `
+const renderPost = (post, isRead, previewText, escapeFn) => `
   <div class="card mb-3">
     <div class="card-body d-flex justify-content-between align-items-center">
-      <a href="${escape(post.link)}" 
+      <a href="${escapeFn(post.link)}" 
         target="_blank"
         class="${isRead ? 'fw-normal' : 'fw-bold'}">
-        ${escape(post.title)}
+        ${escapeFn(post.title)}
       </a>
       <button class="btn btn-sm btn-outline-primary preview-btn"
-        data-link="${escape(post.link)}">
+        data-link="${escapeFn(post.link)}">
         ${previewText}
       </button>
     </div>
   </div>
 `;
 
-const createView = (elements, i18next) => {
+const createView = (initialElements, i18next) => {
+  const elements = { ...initialElements };
   const modal = elements.modal ? new Modal(elements.modal) : null;
+
+  const clearInput = () => {
+    const newElements = { ...elements };
+    newElements.input.value = '';
+    newElements.input.classList.remove('is-invalid');
+    newElements.input.blur();
+  };
 
   return {
     setTranslations() {
-      const { title, description, inputLabel, submitButton } = elements;
-      title.textContent = i18next.t('rssForm.title');
-      description.textContent = i18next.t('rssForm.description');
-      inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
-      submitButton.textContent = i18next.t('rssForm.submitButton');
+      const newElements = { ...elements };
+      newElements.title.textContent = i18next.t('rssForm.title');
+      newElements.description.textContent = i18next.t('rssForm.description');
+      newElements.inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
+      newElements.submitButton.textContent = i18next.t('rssForm.submitButton');
     },
 
     renderFeeds(feeds) {
-      elements.feedsContainer.innerHTML = feeds
-        .map((feed) => renderFeed(feed, escape))
+      const newElements = { ...elements };
+      newElements.feedsContainer.innerHTML = feeds
+        .map((feed) => renderFeed(feed, escapeHtml))
         .join('');
     },
 
     renderPosts(posts, readPosts) {
-      elements.postsContainer.innerHTML = posts
+      const newElements = { ...elements };
+      newElements.postsContainer.innerHTML = posts
         .map((post) => renderPost(
           post,
           readPosts.has(post.link),
           i18next.t('ui.preview'),
-          escape,
+          escapeHtml,
         ))
         .join('');
     },
 
     showPostModal(title, content) {
       if (!modal) return;
-      elements.feedback.textContent = '';
-      elements.feedback.className = 'feedback';
+      const newElements = { ...elements };
+      newElements.feedback.textContent = '';
+      newElements.feedback.className = 'feedback';
 
-      const modalTitle = elements.modal.querySelector('.modal-title');
-      const modalBody = elements.modal.querySelector('.modal-body');
+      const modalTitle = newElements.modal.querySelector('.modal-title');
+      const modalBody = newElements.modal.querySelector('.modal-body');
       modalTitle.textContent = title;
       modalBody.textContent = content;
       modal.show();
     },
 
     showLoading() {
-      elements.feedback.textContent = i18next.t('rssForm.loading');
-      elements.feedback.className = 'feedback text-info';
+      const newElements = { ...elements };
+      newElements.feedback.textContent = i18next.t('rssForm.loading');
+      newElements.feedback.className = 'feedback text-info';
     },
 
     showSuccess(message) {
-      elements.feedback.textContent = message;
-      elements.feedback.className = 'feedback text-success';
-      elements.input.classList.remove('is-invalid');
+      const newElements = { ...elements };
+      newElements.feedback.textContent = message;
+      newElements.feedback.className = 'feedback text-success';
+      newElements.input.classList.remove('is-invalid');
     },
 
     showError(message) {
-      this.clearInput();
-      elements.feedback.textContent = message;
-      elements.feedback.className = 'feedback text-danger';
-      elements.input.classList.add('is-invalid');
+      clearInput();
+      const newElements = { ...elements };
+      newElements.feedback.textContent = message;
+      newElements.feedback.className = 'feedback text-danger';
+      newElements.input.classList.add('is-invalid');
     },
 
     initFormHandler(callback) {
-      elements.form.addEventListener('submit', (e) => {
+      const newElements = { ...elements };
+      newElements.form.addEventListener('submit', (e) => {
         e.preventDefault();
-        callback(elements.input.value.trim());
+        callback(newElements.input.value.trim());
       });
     },
 
     initPreviewHandlers(callback) {
-      elements.postsContainer.addEventListener('click', (e) => {
+      const newElements = { ...elements };
+      newElements.postsContainer.addEventListener('click', (e) => {
         const btn = e.target.closest('.preview-btn');
         if (btn) callback(btn.dataset.link);
       });
     },
 
-    clearInput() {
-      elements.input.value = '';
-      elements.input.classList.remove('is-invalid');
-      elements.input.blur();
-    },
+    clearInput,
   };
 };
 

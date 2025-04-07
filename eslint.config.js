@@ -1,63 +1,61 @@
 import globals from 'globals';
-import js from '@eslint/js';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
+import pluginJs from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
+
+// mimic CommonJS variables -- not needed if using CommonJS
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: pluginJs.configs.recommended,
+});
 
 export default [
   {
     ignores: ['dist/'],
   },
-  js.configs.recommended,
   {
     languageOptions: {
       globals: {
         ...globals.node,
         ...globals.jest,
         ...globals.browser,
-        yup: 'readonly',
-        i18next: 'readonly',
-        onChange: 'readonly',
       },
       parserOptions: {
+        // Eslint doesn't supply ecmaVersion in `parser.js` `context.parserOptions`
+        // This is required to avoid ecmaVersion < 2015 error or 'import' / 'export' error
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
     },
-    plugins: {
-      import: importPlugin,
-    },
+    plugins: { import: importPlugin },
     rules: {
-      indent: ['error', 2],
-      'linebreak-style': ['error', 'unix'],
-      quotes: ['error', 'single'],
-      semi: ['error', 'always'],
-      'comma-dangle': ['error', 'always-multiline'],
+      ...importPlugin.configs.recommended.rules,
+    },
+  },
+  ...compat.extends('airbnb-base'),
+  {
+    rules: {
+      'no-underscore-dangle': [
+        'error',
+        {
+          allow: ['__filename', '__dirname'],
+        },
+      ],
+      'import/extensions': [
+        'error',
+        {
+          js: 'always',
+        },
+      ],
+      'import/no-named-as-default': 'off',
+      'import/no-named-as-default-member': 'off',
       'no-console': 'off',
-      'no-trailing-spaces': 'error',
-      'no-use-before-define': 'error',
-
-      'arrow-parens': ['error', 'always'],
-      'arrow-body-style': ['error', 'as-needed'],
-      'implicit-arrow-linebreak': ['error', 'beside'],
-
-      'object-curly-newline': ['error', {
-        multiline: true,
-        consistent: true,
-      }],
-      'prefer-destructuring': ['error', {
-        array: true,
-        object: true,
-      }],
-
-      'operator-linebreak': ['error', 'before'],
-
-      'function-paren-newline': ['error', 'multiline'],
-
-      'class-methods-use-this': 'error',
-
-      'import/extensions': ['error', 'ignorePackages'],
       'import/no-extraneous-dependencies': 'off',
-      'import/prefer-default-export': 'error',
-      'quote-props': ['error', 'as-needed'],
     },
   },
 ];
