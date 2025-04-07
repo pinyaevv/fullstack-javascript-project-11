@@ -19,7 +19,7 @@ const renderPost = (post, isRead, previewText, escape) => `
         class="${isRead ? 'fw-normal' : 'fw-bold'}">
         ${escape(post.title)}
       </a>
-      <button class="btn btn-sm btn-outline-primary preview-btn ms-2"
+      <button class="btn btn-sm btn-outline-primary preview-btn"
         data-link="${escape(post.link)}">
         ${previewText}
       </button>

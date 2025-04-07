@@ -15,6 +15,9 @@ const initApp = () => {
     posts: [],
     addedUrls: [],
     readPosts: new Set(),
+    ui: {
+      inputValue: '',
+    },
     process: {
       state: 'ready',
       error: null,

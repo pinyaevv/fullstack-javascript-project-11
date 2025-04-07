@@ -57,6 +57,7 @@ const runApp = () => {
     const view = createView(elements, i18next);
 
     observer.subscribe((currentState) => {
+      elements.input.value = currentState.ui.inputValue;
       switch (currentState.process.state) {
       case 'sending':
         view.showLoading();
@@ -89,8 +90,11 @@ const runApp = () => {
     });
 
     const handleFormSubmit = (url) => {
+      state.ui.inputValue = url;
       state.process.state = 'sending';
       state.process.error = null;
+      observer.notify(state);
+
       const normalizedUrl = normalizeUrl(url);
       const currentSchema = createSchema(i18next, state.addedUrls.map(normalizeUrl));
 
@@ -102,7 +106,9 @@ const runApp = () => {
           state.feeds.unshift({ ...feed, url });
           state.posts.unshift(...posts);
 
+          state.ui.inputValue = '';
           observer.notify(state);
+
           view.showSuccess(i18next.t('rssForm.success'));
 
           startFeedUpdates(state, observer);
