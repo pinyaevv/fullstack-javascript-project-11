@@ -1,24 +1,11 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.scss';
+import createStore from './store/storeApp.js';
 import initApp from './index.js';
 import { fetchRSS, parserRSS } from './rss.js';
 import createSchema from './validation.js';
 import logger from './logger.js';
 import createView from './view.js';
-
-class StateObserver {
-  constructor() {
-    this.subscribers = [];
-  }
-
-  subscribe(callback) {
-    this.subscribers.push(callback);
-  }
-
-  notify(newState) {
-    this.subscribers.forEach((cb) => cb(newState));
-  }
-}
 
 const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
 
@@ -39,56 +26,51 @@ const getErrorMessage = (error, i18n) => {
 
 const runApp = () => {
   initApp().then(({ elements, state, i18next }) => {
-    const observer = new StateObserver();
-    const view = createView(elements, i18next, observer);
+    const store = createStore(state);
+    const view = createView(elements, i18next, store);
     const { initFormHandler, initPreviewHandlers } = view.initialization();
 
-    let appState = { ...state };
+    const appState = { ...state };
 
     const handleFormSubmit = (url) => {
-      observer.notify({
-        ...appState,
+      store.update({
         process: { state: 'sending', error: null },
       });
 
-      validateUrl(url, appState.addedUrls, i18next)
+      validateUrl(url, store.state.addedUrls, i18next)
         .then(fetchRSS)
         .then(parserRSS)
         .then(({ feed, posts }) => {
-          appState = {
-            ...appState,
-            addedUrls: [...appState.addedUrls, normalizeUrl(url)],
-            feeds: [{ ...feed, url }, ...appState.feeds],
-            posts: [...posts, ...appState.posts],
+          store.update((prev) => ({
+            addedUrls: [...prev.addedUrls, normalizeUrl(url)],
+            feeds: [{ ...feed, url }, ...prev.feeds],
+            posts: [...posts, ...prev.posts],
             process: { state: 'success' },
-          };
-          observer.notify(appState);
+          }));
         })
         .catch((error) => {
-          const errorMessage = getErrorMessage(error, i18next);
-          appState = {
-            ...appState,
-            process: { state: 'error', error: errorMessage },
-          };
-          observer.notify(appState);
+          store.update({
+            process: {
+              state: 'error',
+              error: getErrorMessage(error, i18next),
+            },
+          });
         });
     };
 
     const handlePreview = (postLink) => {
-      const post = appState.posts.find((p) => p.link === postLink);
+      const post = store.state.posts.find((p) => p.link === postLink);
       if (post) {
-        appState = {
-          ...appState,
-          readPosts: new Set([...appState.readPosts, postLink]),
-        };
-        observer.notify(appState);
+        store.update({
+          readPosts: new Set([...store.state.readPosts, postLink]),
+        });
       }
       return post;
     };
 
     initFormHandler(handleFormSubmit);
     initPreviewHandlers(handlePreview);
-    observer.notify(appState);
+    store.notify(appState);
   }).catch(logger.error);
 };
 
