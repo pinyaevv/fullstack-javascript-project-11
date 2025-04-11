@@ -61,6 +61,7 @@ const runApp = () => {
           store.addFeed({ ...feed, url: normalizeUrl(url) });
           store.addPosts(posts);
           store.setSuccess();
+          view.clearInput();
         })
         .catch((error) => {
           store.setError(getErrorMessage(error, i18next));

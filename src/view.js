@@ -89,10 +89,10 @@ const createView = (elements, i18next, store) => {
       if (localElements.submitButton) localElements.submitButton.textContent = i18next.t('rssForm.submitButton');
 
       return {
-        initFormHandler: (callback) => {
+        initFormHandler: (formHandSubm) => {
           localElements.form?.addEventListener('submit', (e) => {
             e.preventDefault();
-            callback(localElements.input?.value.trim());
+            formHandSubm(localElements.input?.value.trim());
           });
         },
         initPreviewHandlers: (onPreview) => {
