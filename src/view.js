@@ -40,14 +40,30 @@ const createView = (elements, i18next, store) => {
       readPosts: store.readPosts,
     }),
     ({ feeds, posts, readPosts }) => {
+      console.log(
+        'Reaction triggered. Read posts:',
+        Array.isArray(readPosts) ? readPosts : [...readPosts],
+      );
+
       if (localElements.feedsContainer) {
         localElements.feedsContainer.innerHTML = feeds.map(renderFeed).join('');
       }
+
       if (localElements.postsContainer) {
         localElements.postsContainer.innerHTML = posts
-          .map((post) => renderPost(post, readPosts.has(post.link)))
+          .map((post) => {
+            const isRead = Array.isArray(readPosts)
+              ? readPosts.includes(post.link)
+              : readPosts.has(post.link);
+
+            return renderPost(post, isRead);
+          })
           .join('');
       }
+    },
+    {
+      fireImmediately: true,
+      name: 'postsRerender',
     },
   );
 

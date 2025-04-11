@@ -7,7 +7,7 @@ class RssStore {
 
   addedUrls = [];
 
-  readPosts = new Set();
+  readPosts = [];
 
   process = { state: 'ready', error: null };
 
@@ -40,7 +40,9 @@ class RssStore {
   }
 
   markAsRead(postLink) {
-    this.readPosts.add(postLink);
+    if (!this.readPosts.includes(postLink)) {
+      this.readPosts = [...this.readPosts, postLink];
+    }
   }
 }
 
