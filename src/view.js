@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal } from 'bootstrap';
 import { escape as escapeHtml } from 'lodash';
 
-const createView = (initialElements, i18next, store) => {
+const createView = (_initialElements, i18next, observer) => {
   const elements = {
     form: document.querySelector('.rss-form'),
     input: document.getElementById('url-input'),
@@ -76,7 +76,7 @@ const createView = (initialElements, i18next, store) => {
     }
   };
 
-  store.subscribe(handleStateChange);
+  observer.subscribe(handleStateChange);
 
   return {
     initialization() {
