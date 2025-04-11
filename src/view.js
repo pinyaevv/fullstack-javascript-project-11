@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal } from 'bootstrap';
 import { escape as escapeHtml } from 'lodash';
 
-const createView = (initialElements, i18next, observer) => {
+const createView = (i18next, observer) => {
   const elements = {
     form: document.querySelector('.rss-form'),
     input: document.getElementById('url-input'),
@@ -18,7 +18,6 @@ const createView = (initialElements, i18next, observer) => {
 
   const modal = elements.modal ? new Modal(elements.modal) : null;
 
-  // Приватные методы рендеринга
   const renderFeed = (feed) => `
     <div class="card mb-3">
       <div class="card-body">
@@ -45,9 +44,7 @@ const createView = (initialElements, i18next, observer) => {
     </div>
   `;
 
-  // Обработчик изменений состояния
   const handleStateChange = (state) => {
-    // Рендер фидов и постов
     if (elements.feedsContainer) {
       elements.feedsContainer.innerHTML = state.feeds.map(renderFeed).join('');
     }
@@ -57,7 +54,6 @@ const createView = (initialElements, i18next, observer) => {
         .join('');
     }
 
-    // Обработка состояний UI
     switch (state.process.state) {
       case 'sending':
         elements.feedback.textContent = i18next.t('rssForm.loading');
@@ -80,7 +76,6 @@ const createView = (initialElements, i18next, observer) => {
     }
   };
 
-  // Подписываемся на изменения состояния
   observer.subscribe(handleStateChange);
 
   return {
