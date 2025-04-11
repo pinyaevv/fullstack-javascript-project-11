@@ -2,10 +2,23 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal } from 'bootstrap';
 import { escape as escapeHtml } from 'lodash';
 
-const createView = (initialElements, i18next) => {
-  const elements = { ...initialElements };
+const createView = (initialElements, i18next, observer) => {
+  const elements = {
+    form: document.querySelector('.rss-form'),
+    input: document.getElementById('url-input'),
+    feedback: document.querySelector('.feedback'),
+    feedsContainer: document.getElementById('feeds'),
+    postsContainer: document.getElementById('posts'),
+    modal: document.getElementById('postModal'),
+    title: document.querySelector('[data-i18n="title"]'),
+    description: document.querySelector('[data-i18n="description"]'),
+    inputLabel: document.querySelector('label[for="url-input"]'),
+    submitButton: document.querySelector('[type="submit"]'),
+  };
+
   const modal = elements.modal ? new Modal(elements.modal) : null;
 
+  // Приватные методы рендеринга
   const renderFeed = (feed) => `
     <div class="card mb-3">
       <div class="card-body">
@@ -32,76 +45,77 @@ const createView = (initialElements, i18next) => {
     </div>
   `;
 
-  return {
-    setTranslations() {
-      elements.title.textContent = i18next.t('rssForm.title');
-      elements.description.textContent = i18next.t('rssForm.description');
-      elements.inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
-      elements.submitButton.textContent = i18next.t('rssForm.submitButton');
-    },
-
-    renderFeeds(feeds) {
-      elements.feedsContainer.innerHTML = feeds.map(renderFeed).join('');
-    },
-
-    renderPosts(posts, readPosts) {
-      elements.postsContainer.innerHTML = posts
-        .map((post) => renderPost(post, readPosts.has(post.link)))
+  // Обработчик изменений состояния
+  const handleStateChange = (state) => {
+    // Рендер фидов и постов
+    if (elements.feedsContainer) {
+      elements.feedsContainer.innerHTML = state.feeds.map(renderFeed).join('');
+    }
+    if (elements.postsContainer) {
+      elements.postsContainer.innerHTML = state.posts
+        .map((post) => renderPost(post, state.readPosts.has(post.link)))
         .join('');
-    },
+    }
 
-    showPostModal(title, content) {
-      if (!modal) return;
+    // Обработка состояний UI
+    switch (state.process.state) {
+      case 'sending':
+        elements.feedback.textContent = i18next.t('rssForm.loading');
+        elements.feedback.className = 'feedback text-info';
+        break;
+      case 'success':
+        elements.feedback.textContent = i18next.t('rssForm.success');
+        elements.feedback.className = 'feedback text-success';
+        elements.input.classList.remove('is-invalid');
+        elements.input.value = '';
+        break;
+      case 'error':
+        elements.feedback.textContent = state.process.error;
+        elements.feedback.className = 'feedback text-danger';
+        elements.input.classList.add('is-invalid');
+        break;
+      default:
+        elements.input.value = '';
+        elements.input.classList.remove('is-invalid');
+    }
+  };
 
-      const modalTitle = elements.modal.querySelector('.modal-title');
-      const modalBody = elements.modal.querySelector('.modal-body');
+  // Подписываемся на изменения состояния
+  observer.subscribe(handleStateChange);
 
-      modalTitle.textContent = title;
-      modalBody.innerHTML = content;
-      modal.show();
-    },
+  return {
+    initialization() {
+      if (elements.title) elements.title.textContent = i18next.t('rssForm.title');
+      if (elements.description) elements.description.textContent = i18next.t('rssForm.description');
+      if (elements.inputLabel) elements.inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
+      if (elements.submitButton) elements.submitButton.textContent = i18next.t('rssForm.submitButton');
 
-    showLoading() {
-      elements.feedback.textContent = i18next.t('rssForm.loading');
-      elements.feedback.className = 'feedback text-info';
-    },
-
-    showSuccess(message) {
-      elements.feedback.textContent = message;
-      elements.feedback.className = 'feedback text-success';
-      elements.input.classList.remove('is-invalid');
-      this.clearInput();
-    },
-
-    showError(message) {
-      this.clearInput();
-      elements.feedback.textContent = message;
-      elements.feedback.className = 'feedback text-danger';
-      elements.input.classList.add('is-invalid');
-    },
-
-    initFormHandler(callback) {
-      elements.form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        callback(elements.input.value.trim());
-      });
-    },
-
-    initPreviewHandlers(callback) {
-      elements.postsContainer.addEventListener('click', (e) => {
-        const btn = e.target.closest('.preview-btn');
-        if (btn) {
-          e.preventDefault();
-          e.stopPropagation();
-          callback(btn.dataset.link);
-        }
-      });
-    },
-
-    clearInput() {
-      elements.input.value = '';
-      elements.input.classList.remove('is-invalid');
-      elements.input.blur();
+      return {
+        initFormHandler: (sendButtonHandler) => {
+          elements.form?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendButtonHandler(elements.input.value.trim());
+          });
+        },
+        initPreviewHandlers: (onPostPreview) => {
+          elements.postsContainer?.addEventListener('click', (e) => {
+            const btn = e.target.closest('.preview-btn');
+            if (btn) {
+              e.preventDefault();
+              const post = onPostPreview(btn.dataset.link);
+              if (post && modal) {
+                const modalTitle = elements.modal.querySelector('.modal-title');
+                const modalBody = elements.modal.querySelector('.modal-body');
+                if (modalTitle && modalBody) {
+                  modalTitle.textContent = post.title;
+                  modalBody.innerHTML = post.description;
+                  modal.show();
+                }
+              }
+            }
+          });
+        },
+      };
     },
   };
 };

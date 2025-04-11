@@ -20,7 +20,7 @@ export const fetchRSS = (url) => new Promise((resolve, reject) => {
     });
 });
 
-export const parserRSS = (data) => new Promise((resolve, reject) => {
+export const parserRSS = (data) => {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(data, 'application/xml');
@@ -40,9 +40,9 @@ export const parserRSS = (data) => new Promise((resolve, reject) => {
       description: item.querySelector('description')?.textContent || '',
     }));
 
-    resolve({ feed, posts });
+    return { feed, posts };
   } catch (error) {
     logger.error('Parse error:', error);
-    reject(new Error(error.message === 'InvalidRSS' ? 'InvalidRSS' : 'ParseError'));
+    throw new Error(error.message === 'InvalidRSS' ? 'InvalidRSS' : 'ParseError');
   }
-});
+};
