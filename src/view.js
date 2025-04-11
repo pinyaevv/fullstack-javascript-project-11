@@ -1,22 +1,11 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal } from 'bootstrap';
 import { escape as escapeHtml } from 'lodash';
+import { reaction } from 'mobx';
 
-const createView = (_initialElements, i18next, observer) => {
-  const elements = {
-    form: document.querySelector('.rss-form'),
-    input: document.getElementById('url-input'),
-    feedback: document.querySelector('.feedback'),
-    feedsContainer: document.getElementById('feeds'),
-    postsContainer: document.getElementById('posts'),
-    modal: document.getElementById('postModal'),
-    title: document.querySelector('[data-i18n="title"]'),
-    description: document.querySelector('[data-i18n="description"]'),
-    inputLabel: document.querySelector('label[for="url-input"]'),
-    submitButton: document.querySelector('[type="submit"]'),
-  };
-
-  const modal = elements.modal ? new Modal(elements.modal) : null;
+const createView = (elements, i18next, store) => {
+  const localElements = { ...elements };
+  const modal = localElements.modal ? new Modal(localElements.modal) : null;
 
   const renderFeed = (feed) => `
     <div class="card mb-3">
@@ -44,63 +33,77 @@ const createView = (_initialElements, i18next, observer) => {
     </div>
   `;
 
-  const handleStateChange = (state) => {
-    if (elements.feedsContainer) {
-      elements.feedsContainer.innerHTML = state.feeds.map(renderFeed).join('');
-    }
-    if (elements.postsContainer) {
-      elements.postsContainer.innerHTML = state.posts
-        .map((post) => renderPost(post, state.readPosts.has(post.link)))
-        .join('');
-    }
+  reaction(
+    () => ({
+      feeds: store.feeds,
+      posts: store.posts,
+      readPosts: store.readPosts,
+    }),
+    ({ feeds, posts, readPosts }) => {
+      if (localElements.feedsContainer) {
+        localElements.feedsContainer.innerHTML = feeds.map(renderFeed).join('');
+      }
+      if (localElements.postsContainer) {
+        localElements.postsContainer.innerHTML = posts
+          .map((post) => renderPost(post, readPosts.has(post.link)))
+          .join('');
+      }
+    },
+  );
 
-    switch (state.process.state) {
-      case 'sending':
-        elements.feedback.textContent = i18next.t('rssForm.loading');
-        elements.feedback.className = 'feedback text-info';
-        break;
-      case 'success':
-        elements.feedback.textContent = i18next.t('rssForm.success');
-        elements.feedback.className = 'feedback text-success';
-        elements.input.classList.remove('is-invalid');
-        elements.input.value = '';
-        break;
-      case 'error':
-        elements.feedback.textContent = state.process.error;
-        elements.feedback.className = 'feedback text-danger';
-        elements.input.classList.add('is-invalid');
-        break;
-      default:
-        elements.input.value = '';
-        elements.input.classList.remove('is-invalid');
+  const showLoading = () => {
+    if (localElements.feedback) {
+      localElements.feedback.textContent = i18next.t('rssForm.loading');
+      localElements.feedback.className = 'feedback text-info';
     }
   };
 
-  observer.subscribe(handleStateChange);
+  const showSuccess = (message) => {
+    if (localElements.feedback && localElements.input) {
+      localElements.feedback.textContent = message;
+      localElements.feedback.className = 'feedback text-success';
+      localElements.input.classList.remove('is-invalid');
+    }
+  };
+
+  const showError = (message) => {
+    if (localElements.feedback && localElements.input) {
+      localElements.feedback.textContent = message;
+      localElements.feedback.className = 'feedback text-danger';
+      localElements.input.classList.add('is-invalid');
+    }
+  };
+
+  const clearInput = () => {
+    if (localElements.input) {
+      localElements.input.value = '';
+      localElements.input.classList.remove('is-invalid');
+    }
+  };
 
   return {
-    initialization() {
-      if (elements.title) elements.title.textContent = i18next.t('rssForm.title');
-      if (elements.description) elements.description.textContent = i18next.t('rssForm.description');
-      if (elements.inputLabel) elements.inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
-      if (elements.submitButton) elements.submitButton.textContent = i18next.t('rssForm.submitButton');
+    init() {
+      if (localElements.title) localElements.title.textContent = i18next.t('rssForm.title');
+      if (localElements.description) localElements.description.textContent = i18next.t('rssForm.description');
+      if (localElements.inputLabel) localElements.inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
+      if (localElements.submitButton) localElements.submitButton.textContent = i18next.t('rssForm.submitButton');
 
       return {
-        initFormHandler: (sendButtonHandler) => {
-          elements.form?.addEventListener('submit', (e) => {
+        initFormHandler: (callback) => {
+          localElements.form?.addEventListener('submit', (e) => {
             e.preventDefault();
-            sendButtonHandler(elements.input.value.trim());
+            callback(localElements.input?.value.trim());
           });
         },
-        initPreviewHandlers: (onPostPreview) => {
-          elements.postsContainer?.addEventListener('click', (e) => {
+        initPreviewHandlers: (onPreview) => {
+          localElements.postsContainer?.addEventListener('click', (e) => {
             const btn = e.target.closest('.preview-btn');
             if (btn) {
               e.preventDefault();
-              const post = onPostPreview(btn.dataset.link);
+              const post = onPreview(btn.dataset.link);
               if (post && modal) {
-                const modalTitle = elements.modal.querySelector('.modal-title');
-                const modalBody = elements.modal.querySelector('.modal-body');
+                const modalTitle = localElements.modal.querySelector('.modal-title');
+                const modalBody = localElements.modal.querySelector('.modal-body');
                 if (modalTitle && modalBody) {
                   modalTitle.textContent = post.title;
                   modalBody.innerHTML = post.description;
@@ -112,6 +115,10 @@ const createView = (_initialElements, i18next, observer) => {
         },
       };
     },
+    showLoading,
+    showSuccess,
+    showError,
+    clearInput,
   };
 };
 

@@ -1,29 +1,19 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.scss';
+import { reaction } from 'mobx';
 import initApp from './index.js';
 import { fetchRSS, parserRSS } from './rss.js';
 import createSchema from './validation.js';
 import logger from './logger.js';
 import createView from './view.js';
-
-class StateObserver {
-  constructor() {
-    this.subscribers = [];
-  }
-
-  subscribe(callback) {
-    this.subscribers.push(callback);
-  }
-
-  notify(newState) {
-    this.subscribers.forEach((cb) => cb(newState));
-  }
-}
+import store from './store/storeApp.js';
 
 const normalizeUrl = (url) => url.trim().replace(/\/+$/, '').toLowerCase();
 
 const validateUrl = (url, addedUrls, i18next) => {
-  if (!url.trim()) return Promise.reject(new Error(i18next.t('errors.required')));
+  if (!url.trim()) {
+    return Promise.reject(new Error(i18next.t('errors.required')));
+  }
 
   return createSchema(i18next, addedUrls.map(normalizeUrl))
     .validate({ url: normalizeUrl(url) }, { abortEarly: false })
@@ -38,57 +28,56 @@ const getErrorMessage = (error, i18n) => {
 };
 
 const runApp = () => {
-  initApp().then(({ elements, state, i18next }) => {
-    const observer = new StateObserver();
-    const view = createView(elements, i18next, observer);
-    const { initFormHandler, initPreviewHandlers } = view.initialization();
+  initApp().then(({ elements, i18next }) => {
+    const view = createView(elements, i18next, store);
+    const { initFormHandler, initPreviewHandlers } = view.init();
 
-    let appState = { ...state };
+    reaction(
+      () => store.process.state,
+      (state) => {
+        switch (state) {
+          case 'sending':
+            view.showLoading();
+            break;
+          case 'success':
+            view.showSuccess(i18next.t('rssForm.success'));
+            break;
+          case 'error':
+            view.showError(store.process.error);
+            break;
+          default:
+            view.clearInput();
+        }
+      },
+    );
 
     const handleFormSubmit = (url) => {
-      observer.notify({
-        ...appState,
-        process: { state: 'sending', error: null },
-      });
+      store.setLoading();
 
-      validateUrl(url, appState.addedUrls, i18next)
+      validateUrl(url, store.addedUrls, i18next)
         .then(fetchRSS)
         .then(parserRSS)
         .then(({ feed, posts }) => {
-          appState = {
-            ...appState,
-            addedUrls: [...appState.addedUrls, normalizeUrl(url)],
-            feeds: [{ ...feed, url }, ...appState.feeds],
-            posts: [...posts, ...appState.posts],
-            process: { state: 'success' },
-          };
-          observer.notify(appState);
+          store.addFeed({ ...feed, url: normalizeUrl(url) });
+          store.addPosts(posts);
+          store.setSuccess();
         })
         .catch((error) => {
-          const errorMessage = getErrorMessage(error, i18next);
-          appState = {
-            ...appState,
-            process: { state: 'error', error: errorMessage },
-          };
-          observer.notify(appState);
+          store.setError(getErrorMessage(error, i18next));
         });
     };
 
     const handlePreview = (postLink) => {
-      const post = appState.posts.find((p) => p.link === postLink);
+      const post = store.posts.find((p) => p.link === postLink);
       if (post) {
-        appState = {
-          ...appState,
-          readPosts: new Set([...appState.readPosts, postLink]),
-        };
-        observer.notify(appState);
+        store.markAsRead(postLink);
+        return post;
       }
-      return post;
+      return null;
     };
 
     initFormHandler(handleFormSubmit);
     initPreviewHandlers(handlePreview);
-    observer.notify(appState);
   }).catch(logger.error);
 };
 
