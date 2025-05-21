@@ -7,7 +7,7 @@ import sass from 'sass'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default {
-  mode: process.env.NODE_ENV || 'development',
+  mode: process.env.NODE_ENV || 'development', // eslint-disable-line no-undef
   entry: './src/app.js',
   output: {
     filename: 'main.js',
