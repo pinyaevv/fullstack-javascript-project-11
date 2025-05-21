@@ -67,6 +67,22 @@ const createView = (elements, i18next, store) => {
     },
   );
 
+  reaction(
+    () => store.previewPost,
+    (post) => {
+      if (post && modal) {
+        const modalTitle = localElements.modal.querySelector('.modal-title');
+        const modalBody = localElements.modal.querySelector('.modal-body');
+        if (modalTitle && modalBody) {
+          modalTitle.textContent = post.title;
+          modalBody.innerHTML = post.description;
+          modal.show();
+        }
+      }
+    },
+    { name: 'previewModalReaction' },
+  );
+
   const showLoading = () => {
     if (localElements.feedback) {
       localElements.feedback.textContent = i18next.t('rssForm.loading');
@@ -97,40 +113,29 @@ const createView = (elements, i18next, store) => {
     }
   };
 
-  return {
-    init() {
-      if (localElements.title) localElements.title.textContent = i18next.t('rssForm.title');
-      if (localElements.description) localElements.description.textContent = i18next.t('rssForm.description');
-      if (localElements.inputLabel) localElements.inputLabel.textContent = i18next.t('rssForm.inputPlaceholder');
-      if (localElements.submitButton) localElements.submitButton.textContent = i18next.t('rssForm.submitButton');
+  const initFormHandler = (formSubmitHandler) => {
+    localElements.form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      formSubmitHandler(localElements.input?.value.trim());
+    });
+  };
 
-      return {
-        initFormHandler: (formHandSubm) => {
-          localElements.form?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            formHandSubm(localElements.input?.value.trim());
-          });
-        },
-        initPreviewHandlers: (onPreview) => {
-          localElements.postsContainer?.addEventListener('click', (e) => {
-            const btn = e.target.closest('.preview-btn');
-            if (btn) {
-              e.preventDefault();
-              const post = onPreview(btn.dataset.link);
-              if (post && modal) {
-                const modalTitle = localElements.modal.querySelector('.modal-title');
-                const modalBody = localElements.modal.querySelector('.modal-body');
-                if (modalTitle && modalBody) {
-                  modalTitle.textContent = post.title;
-                  modalBody.innerHTML = post.description;
-                  modal.show();
-                }
-              }
-            }
-          });
-        },
-      };
-    },
+  const initPreviewHandlers = (onPreview) => {
+    localElements.postsContainer?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.preview-btn');
+      if (btn) {
+        e.preventDefault();
+        const post = onPreview(btn.dataset.link);
+        if (post) {
+          store.setPreviewPost(post);
+        }
+      }
+    });
+  };
+
+  return {
+    initFormHandler,
+    initPreviewHandlers,
     showLoading,
     showSuccess,
     showError,

@@ -30,7 +30,7 @@ const getErrorMessage = (error, i18n) => {
 const runApp = () => {
   initApp().then(({ elements, i18next }) => {
     const view = createView(elements, i18next, store);
-    const { initFormHandler, initPreviewHandlers } = view.init();
+    const { initFormHandler, initPreviewHandlers } = view;
 
     reaction(
       () => store.process.state,
@@ -56,12 +56,16 @@ const runApp = () => {
 
       validateUrl(url, store.addedUrls, i18next)
         .then(fetchRSS)
-        .then(parserRSS)
-        .then(({ feed, posts }) => {
-          store.addFeed({ ...feed, url: normalizeUrl(url) });
-          store.addPosts(posts);
-          store.setSuccess();
-          view.clearInput();
+        .then((data) => {
+          try {
+            const { feed, posts } = parserRSS(data);
+            store.addFeed({ ...feed, url: normalizeUrl(url) });
+            store.addPosts(posts);
+            store.setSuccess();
+            view.clearInput();
+          } catch (error) {
+            store.setError(getErrorMessage(error, i18next));
+          }
         })
         .catch((error) => {
           store.setError(getErrorMessage(error, i18next));
@@ -72,9 +76,8 @@ const runApp = () => {
       const post = store.posts.find((p) => p.link === postLink);
       if (post) {
         store.markAsRead(postLink);
-        return post;
+        store.setPreviewPost(post);
       }
-      return null;
     };
 
     initFormHandler(handleFormSubmit);

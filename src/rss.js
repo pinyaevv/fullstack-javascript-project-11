@@ -1,24 +1,27 @@
 import axios from 'axios';
 import logger from './logger.js';
 
-export const fetchRSS = (url) => new Promise((resolve, reject) => {
-  const proxyUrl = `https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}&disableCache=true`;
+export const fetchRSS = (url) => {
+  const proxy = new URL('https://allorigins.hexlet.app/get');
+  proxy.searchParams.set('url', url);
+  proxy.searchParams.set('disableCache', 'true');
+  const proxyUrl = proxy.toString();
 
-  axios.get(proxyUrl, { timeout: 5000 })
+  return axios.get(proxyUrl, { timeout: 5000 })
     .then((response) => {
       if (!response.data.contents) {
         throw new Error('InvalidRSS');
       }
-      resolve(response.data.contents);
+      return response.data.contents;
     })
     .catch((error) => {
       const errorType = (error.code === 'ECONNABORTED'
           || error.message.includes('network')
           || error.isAxiosError) ? 'network' : 'invalidRss';
 
-      reject(new Error(errorType));
+      throw Error(errorType);
     });
-});
+};
 
 export const parserRSS = (data) => {
   try {
