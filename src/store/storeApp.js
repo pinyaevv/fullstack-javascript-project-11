@@ -1,56 +1,56 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable } from 'mobx'
 
 class RssStore {
-  feeds = [];
+  feeds = []
 
-  posts = [];
+  posts = []
 
-  addedUrls = [];
+  addedUrls = []
 
-  readPosts = [];
+  readPosts = []
 
-  process = { state: 'ready', error: null };
+  process = { state: 'ready', error: null }
 
-  ui = { inputValue: '' };
+  ui = { inputValue: '' }
 
-  previewPost = null;
+  previewPost = null
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this)
   }
 
   setLoading() {
-    this.process = { state: 'sending', error: null };
+    this.process = { state: 'sending', error: null }
   }
 
   setSuccess() {
-    this.process = { state: 'success', error: null };
-    this.ui.inputValue = '';
+    this.process = { state: 'success', error: null }
+    this.ui.inputValue = ''
   }
 
   setError(error) {
-    this.process = { state: 'error', error };
+    this.process = { state: 'error', error }
   }
 
   addFeed(feed) {
-    this.feeds.unshift(feed);
-    this.addedUrls.push(feed.url);
+    this.feeds.unshift(feed)
+    this.addedUrls.push(feed.url)
   }
 
   addPosts(posts) {
-    this.posts = [...posts, ...this.posts];
+    this.posts = [...posts, ...this.posts]
   }
 
   setPreviewPost(post) {
-    this.previewPost = post;
+    this.previewPost = post
   }
 
   markAsRead(postLink) {
     if (!this.readPosts.includes(postLink)) {
-      this.readPosts = [...this.readPosts, postLink];
+      this.readPosts = [...this.readPosts, postLink]
     }
   }
 }
 
-const store = new RssStore();
-export default store;
+const store = new RssStore()
+export default store

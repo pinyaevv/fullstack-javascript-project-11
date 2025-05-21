@@ -1,9 +1,9 @@
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import sass from 'sass';
+import HtmlWebpackPlugin from 'html-webpack-plugin'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import sass from 'sass'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default {
   mode: process.env.NODE_ENV || 'development',
@@ -75,4 +75,4 @@ export default {
       },
     },
   },
-};
+}

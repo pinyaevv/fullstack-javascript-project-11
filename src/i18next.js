@@ -1,4 +1,4 @@
-import i18next from 'i18next';
+import i18next from 'i18next'
 
 const createI18n = () => i18next.init({
   lng: 'ru',
@@ -28,6 +28,6 @@ const createI18n = () => i18next.init({
       },
     },
   },
-}).then(() => i18next);
+}).then(() => i18next)
 
-export default createI18n;
+export default createI18n

@@ -1,4 +1,4 @@
-import createI18n from './i18next.js';
+import createI18n from './i18next.js'
 
 const initApp = () => {
   const elements = {
@@ -8,7 +8,7 @@ const initApp = () => {
     feedsContainer: document.getElementById('feeds'),
     postsContainer: document.getElementById('posts'),
     modal: document.getElementById('postModal'),
-  };
+  }
 
   const state = {
     feeds: [],
@@ -22,9 +22,9 @@ const initApp = () => {
       state: 'ready',
       error: null,
     },
-  };
+  }
 
-  return createI18n().then((i18next) => ({ elements, state, i18next }));
-};
+  return createI18n().then(i18next => ({ elements, state, i18next }))
+}
 
-export default initApp;
+export default initApp

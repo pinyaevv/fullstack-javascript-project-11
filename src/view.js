@@ -1,20 +1,20 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Modal } from 'bootstrap';
-import { escape as escapeHtml } from 'lodash';
-import { reaction } from 'mobx';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Modal } from 'bootstrap'
+import { escape as escapeHtml } from 'lodash'
+import { reaction } from 'mobx'
 
 const createView = (elements, i18next, store) => {
-  const localElements = { ...elements };
-  const modal = localElements.modal ? new Modal(localElements.modal) : null;
+  const localElements = { ...elements }
+  const modal = localElements.modal ? new Modal(localElements.modal) : null
 
-  const renderFeed = (feed) => `
+  const renderFeed = feed => `
     <div class="card mb-3">
       <div class="card-body">
         <h4>${escapeHtml(feed.title)}</h4>
         <p>${escapeHtml(feed.description)}</p>
       </div>
     </div>
-  `;
+  `
 
   const renderPost = (post, isRead) => `
     <div class="card mb-3">
@@ -31,7 +31,7 @@ const createView = (elements, i18next, store) => {
         </button>
       </div>
     </div>
-  `;
+  `
 
   reaction(
     () => ({
@@ -43,10 +43,10 @@ const createView = (elements, i18next, store) => {
       console.log(
         'Reaction triggered. Read posts:',
         Array.isArray(readPosts) ? readPosts : [...readPosts],
-      );
+      )
 
       if (localElements.feedsContainer) {
-        localElements.feedsContainer.innerHTML = feeds.map(renderFeed).join('');
+        localElements.feedsContainer.innerHTML = feeds.map(renderFeed).join('')
       }
 
       if (localElements.postsContainer) {
@@ -54,84 +54,84 @@ const createView = (elements, i18next, store) => {
           .map((post) => {
             const isRead = Array.isArray(readPosts)
               ? readPosts.includes(post.link)
-              : readPosts.has(post.link);
+              : readPosts.has(post.link)
 
-            return renderPost(post, isRead);
+            return renderPost(post, isRead)
           })
-          .join('');
+          .join('')
       }
     },
     {
       fireImmediately: true,
       name: 'postsRerender',
     },
-  );
+  )
 
   reaction(
     () => store.previewPost,
     (post) => {
       if (post && modal) {
-        const modalTitle = localElements.modal.querySelector('.modal-title');
-        const modalBody = localElements.modal.querySelector('.modal-body');
+        const modalTitle = localElements.modal.querySelector('.modal-title')
+        const modalBody = localElements.modal.querySelector('.modal-body')
         if (modalTitle && modalBody) {
-          modalTitle.textContent = post.title;
-          modalBody.innerHTML = post.description;
-          modal.show();
+          modalTitle.textContent = post.title
+          modalBody.innerHTML = post.description
+          modal.show()
         }
       }
     },
     { name: 'previewModalReaction' },
-  );
+  )
 
   const showLoading = () => {
     if (localElements.feedback) {
-      localElements.feedback.textContent = i18next.t('rssForm.loading');
-      localElements.feedback.className = 'feedback text-info';
+      localElements.feedback.textContent = i18next.t('rssForm.loading')
+      localElements.feedback.className = 'feedback text-info'
     }
-  };
+  }
 
   const showSuccess = (message) => {
     if (localElements.feedback && localElements.input) {
-      localElements.feedback.textContent = message;
-      localElements.feedback.className = 'feedback text-success';
-      localElements.input.classList.remove('is-invalid');
+      localElements.feedback.textContent = message
+      localElements.feedback.className = 'feedback text-success'
+      localElements.input.classList.remove('is-invalid')
     }
-  };
+  }
 
   const showError = (message) => {
     if (localElements.feedback && localElements.input) {
-      localElements.feedback.textContent = message;
-      localElements.feedback.className = 'feedback text-danger';
-      localElements.input.classList.add('is-invalid');
+      localElements.feedback.textContent = message
+      localElements.feedback.className = 'feedback text-danger'
+      localElements.input.classList.add('is-invalid')
     }
-  };
+  }
 
   const clearInput = () => {
     if (localElements.input) {
-      localElements.input.value = '';
-      localElements.input.classList.remove('is-invalid');
+      localElements.input.value = ''
+      localElements.input.classList.remove('is-invalid')
     }
-  };
+  }
 
   const initFormHandler = (formSubmitHandler) => {
     localElements.form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      formSubmitHandler(localElements.input?.value.trim());
-    });
-  };
+      e.preventDefault()
+      formSubmitHandler(localElements.input?.value.trim())
+    })
+  }
 
   const initPreviewHandlers = (onPreview) => {
     localElements.postsContainer?.addEventListener('click', (e) => {
-      const btn = e.target.closest('.preview-btn');
+      const btn = e.target.closest('.preview-btn')
       if (btn) {
-        e.preventDefault();
-        const post = onPreview(btn.dataset.link);
+        e.preventDefault()
+        const post = onPreview(btn.dataset.link)
         if (post) {
-          store.setPreviewPost(post);
+          store.setPreviewPost(post)
         }
       }
-    });
-  };
+    })
+  }
 
   return {
     initFormHandler,
@@ -140,7 +140,7 @@ const createView = (elements, i18next, store) => {
     showSuccess,
     showError,
     clearInput,
-  };
-};
+  }
+}
 
-export default createView;
+export default createView

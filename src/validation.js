@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import * as yup from 'yup'
 
 const createSchema = (i18next, addedUrls = []) => {
   yup.setLocale({
@@ -9,7 +9,7 @@ const createSchema = (i18next, addedUrls = []) => {
     string: {
       url: i18next.t('errors.url'),
     },
-  });
+  })
 
   return yup.object().shape({
     url: yup
@@ -17,7 +17,7 @@ const createSchema = (i18next, addedUrls = []) => {
       .required()
       .url()
       .notOneOf(addedUrls),
-  });
-};
+  })
+}
 
-export default createSchema;
+export default createSchema
