@@ -73,8 +73,8 @@ const runApp = () => {
         })
     }
 
-    const handlePreview = postLink => {
-      const post = store.posts.find((p) => p.link === postLink)
+    const handlePreview = (postLink) => {
+      const post = store.posts.find(p => p.link === postLink)
       if (post) {
         store.markAsRead(postLink)
         store.setPreviewPost(post)

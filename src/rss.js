@@ -16,10 +16,10 @@ export const fetchRSS = (url) => {
     })
     .catch((error) => {
       const errorType = (error.code === 'ECONNABORTED'
-          || error.message.includes('network')
-          || error.isAxiosError)
-          ? 'network'
-          : 'invalidRss'
+        || error.message.includes('network')
+        || error.isAxiosError)
+        ? 'network'
+        : 'invalidRss'
 
       throw Error(errorType)
     })
@@ -46,7 +46,7 @@ export const parserRSS = (data) => {
     }))
 
     return { feed, posts }
-  } 
+  }
   catch (error) {
     logger.error('Parse error:', error)
     throw new Error(error.message === 'InvalidRSS' ? 'InvalidRSS' : 'ParseError')
