@@ -54,7 +54,7 @@ export const parserRSS = (data) => {
 
     const items = Array.from(doc.getElementsByTagName('item'))
 
-    const posts = items.map((item) => ({
+    const posts = items.map(item => ({
       title: getText(item, 'title') || 'No title',
       link: getText(item, 'link')?.trim() || '#',
       description: getText(item, 'description') || '',

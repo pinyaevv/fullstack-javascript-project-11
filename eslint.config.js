@@ -57,9 +57,10 @@ export default [
       'import/no-named-as-default-member': 'off',
       'no-console': 'off',
       'import/no-extraneous-dependencies': 'off',
-      semi: ['error', 'never'],
+      'semi': ['error', 'never'],
       'arrow-parens': 'off',
       'brace-style': ['error', 'stroustrup'],
+      '@stylistic/quote-props': ['error', 'as-needed'],
     },
   },
 ]

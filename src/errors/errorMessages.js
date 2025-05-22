@@ -1,5 +1,5 @@
 const ERROR_MESSAGES = {
-  ValidationError: (error) => error.errors[0],
+  ValidationError: error => error.errors[0],
   InvalidRSS: (_, i18n) => i18n.t('errors.invalidRss'),
   InvalidResponse: (_, i18n) => i18n.t('errors.invalidResponse'),
   NetworkError: (_, i18n) => i18n.t('errors.network'),

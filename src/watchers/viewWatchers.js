@@ -2,7 +2,7 @@ import { reaction } from 'mobx'
 import { escape as escapeHtml } from 'lodash'
 import { Modal } from 'bootstrap'
 
-const renderFeed = (feed) => `
+const renderFeed = feed => `
   <div class="card mb-3">
     <div class="card-body">
       <h4>${escapeHtml(feed.title)}</h4>
@@ -47,7 +47,7 @@ const initViewWatchers = (store, elements, i18next) => {
 
       if (elements.postsContainer) {
         elements.postsContainer.innerHTML = posts
-          .map(post => {
+          .map((post) => {
             const isRead = readPosts.includes(post.link)
             return renderPost(post, isRead, i18next.t('ui.preview'))
           })
