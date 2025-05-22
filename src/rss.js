@@ -69,8 +69,8 @@ export const parserRSS = (data) => {
       throw error
     }
 
-    const parseError = new Error('ParseError')
-    parseError.name = 'ParseError'
+    const parseError = new Error('InvalidRSS')
+    parseError.name = 'InvalidRSS'
     throw parseError
   }
 }
