@@ -7,11 +7,12 @@ class RssStore {
 
   addedUrls = []
 
-  readPosts = []
+  ui = {
+    inputValue: '',
+    readPosts: [],
+  }
 
-  process = { state: 'ready', error: null }
-
-  ui = { inputValue: '' }
+  form = { state: 'ready', error: null }
 
   previewPost = null
 
@@ -20,16 +21,16 @@ class RssStore {
   }
 
   setLoading() {
-    this.process = { state: 'sending', error: null }
+    this.form = { state: 'sending', error: null }
   }
 
   setSuccess() {
-    this.process = { state: 'success', error: null }
+    this.form = { state: 'success', error: null }
     this.ui.inputValue = ''
   }
 
   setError(error) {
-    this.process = { state: 'error', error }
+    this.form = { state: 'error', error }
   }
 
   addFeed(feed) {
@@ -46,8 +47,8 @@ class RssStore {
   }
 
   markAsRead(postLink) {
-    if (!this.readPosts.includes(postLink)) {
-      this.readPosts = [...this.readPosts, postLink]
+    if (!this.ui.readPosts.includes(postLink)) {
+      this.ui.readPosts = [...this.ui.readPosts, postLink]
     }
   }
 }

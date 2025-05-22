@@ -22,6 +22,7 @@ const createI18n = () => i18next.init({
           notOneOf: 'RSS уже существует',
           url: 'Ссылка должна быть валидным URL',
           invalidRss: 'Ресурс не содержит валидный RSS',
+          invalidResponse: 'Получен неверный ответ от сервера',
           network: 'Ошибка сети',
           unknown: 'Неизвестная ошибка',
         },

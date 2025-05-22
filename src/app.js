@@ -1,30 +1,33 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './styles.scss'
-import { reaction } from 'mobx'
-import initApp from './index.js'
+import * as yup from 'yup'
+import initApp from './init.js'
 import { fetchRSS, parserRSS } from './rss.js'
-import createSchema from './validation.js'
 import logger from './logger.js'
 import createView from './view.js'
 import store from './store/storeApp.js'
+import getErrorMessage from './errors/errorMessages.js'
+import initFormStateWatcher from './watchers/appWatchers.js'
+import initViewWatchers from './watchers/viewWatchers.js'
 
 const normalizeUrl = url => url.trim().replace(/\/+$/, '').toLowerCase()
 
 const validateUrl = (url, addedUrls, i18next) => {
-  if (!url.trim()) {
-    return Promise.reject(new Error(i18next.t('errors.required')))
-  }
+  const normalizedUrl = normalizeUrl(url)
 
-  return createSchema(i18next, addedUrls.map(normalizeUrl))
-    .validate({ url: normalizeUrl(url) }, { abortEarly: false })
-    .then(() => normalizeUrl(url))
-}
+  const schema = yup.string()
+    .required(i18next.t('errors.required'))
+    .url(i18next.t('errors.url'))
+    .notOneOf(addedUrls.map(u => normalizeUrl(u)), i18next.t('errors.notOneOf'))
 
-const getErrorMessage = (error, i18n) => {
-  if (error.name === 'ValidationError') return error.errors[0]
-  if (error.message === 'InvalidRSS') return i18n.t('errors.invalidRss')
-  if (error.message.includes('network')) return i18n.t('errors.network')
-  return error.message || i18n.t('errors.unknown')
+  return schema
+    .validate(normalizedUrl)
+    .then(() => normalizedUrl)
+    .catch((error) => {
+      const err = new Error(error.message)
+      err.name = 'ValidationError'
+      return Promise.reject(error)
+    })
 }
 
 const runApp = () => {
@@ -32,24 +35,8 @@ const runApp = () => {
     const view = createView(elements, i18next, store)
     const { initFormHandler, initPreviewHandlers } = view
 
-    reaction(
-      () => store.process.state,
-      (state) => {
-        switch (state) {
-          case 'sending':
-            view.showLoading()
-            break
-          case 'success':
-            view.showSuccess(i18next.t('rssForm.success'))
-            break
-          case 'error':
-            view.showError(store.process.error)
-            break
-          default:
-            view.clearInput()
-        }
-      },
-    )
+    initFormStateWatcher(store, view, i18next)
+    initViewWatchers(store, elements, i18next)
 
     const handleFormSubmit = (url) => {
       store.setLoading()
@@ -57,16 +44,11 @@ const runApp = () => {
       validateUrl(url, store.addedUrls, i18next)
         .then(fetchRSS)
         .then((data) => {
-          try {
-            const { feed, posts } = parserRSS(data)
-            store.addFeed({ ...feed, url: normalizeUrl(url) })
-            store.addPosts(posts)
-            store.setSuccess()
-            view.clearInput()
-          }
-          catch (error) {
-            store.setError(getErrorMessage(error, i18next))
-          }
+          const { feed, posts } = parserRSS(data)
+          store.addFeed({ ...feed, url: normalizeUrl(url) })
+          store.addPosts(posts)
+          store.setSuccess()
+          view.clearInput()
         })
         .catch((error) => {
           store.setError(getErrorMessage(error, i18next))
@@ -83,7 +65,9 @@ const runApp = () => {
 
     initFormHandler(handleFormSubmit)
     initPreviewHandlers(handlePreview)
-  }).catch(logger.error)
+  }).catch((error) => {
+    logger.error('Ошибка инициализации приложения:', error.message || error)
+  })
 }
 
 runApp()
